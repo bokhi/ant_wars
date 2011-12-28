@@ -8,6 +8,7 @@ module Grid (Grid(..)
             , antCollision
             , Direction
             , AntNb
+            , replaceNth -- TODO : move to a helper function module
             ) where 
 
 import System.Random
@@ -19,9 +20,16 @@ nbFood = 15
 fov = 5
 antInitialPosition = [(5,  2), (5, 8)]
 
+replaceNth n newVal (x:xs)
+     | n == 0 = newVal:xs
+     | otherwise = x:replaceNth (n-1) newVal xs
+
+
+
+
 -- | The food and ants are represented as lists of points on the grid
 data Grid = Grid { food :: [(Int, Int)]
-                 , ants :: [(Int, Int)]
+                 , antPositions :: [(Int, Int)]
                  } 
                             
 -- | This function generates a dimension*dimension grid containing nbFood pieces of food             
@@ -38,9 +46,6 @@ generateGrid gen = Grid food antInitialPosition
           else generate xs ((x, x'):l)
 
 
-replaceNth n newVal (x:xs)
-     | n == 0 = newVal:xs
-     | otherwise = x:replaceNth (n-1) newVal xs
                    
 coord (x, y) = (succ dimension)*2*(2*x + 1) + 2*y + 1 -- translate a point to its position in the ascii table
 
@@ -50,7 +55,7 @@ showGrid g =
       column  = intersperse ' ' (replicate (succ dimension) '|') ++ "\n"
       grid = intercalate column (replicate (succ dimension) row)
       grid' = foldl (\ g pos -> replaceNth (coord pos) 'F' g) grid (food g)
-      (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (ants g)
+      (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (antPositions g)
   in grid''
      
 -- | The grid can be represented as a ASCII table, F for pieces of food, 1 and 2 for ant1 and ant2 respectively     
@@ -78,27 +83,27 @@ type AntNb = Int
 -- | This function generates a new grid following the move of a specific ant
 updateGrid :: Grid -> AntNb -> Direction -> Grid
 updateGrid g n m  = 
-  Grid food' (replaceNth (pred n) pos' (ants g))
+  Grid food' (replaceNth (pred n) pos' (antPositions g))
     where
-      pos' = updatePos (ants g !! (pred n)) m
+      pos' = updatePos (antPositions g !! (pred n)) m
       food' = delete pos' $ food g
 
 -- | 90' rotation of a grid
 rotateGrid :: Grid -> Grid
-rotateGrid g = Grid (map rotate (food g)) (map rotate (ants g))
+rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g))
   where rotate (x, y) = (y, mod (-x - 1) dimension)      
         
 -- | Number of pieces of food on a grid        
 foodLeft g = length $ food g
 
 -- | Collision between the ants
-antCollision g = ants g !! 0 == ants g !! 1 -- only works for two ants
+antCollision g = antPositions g !! 0 == antPositions g !! 1 -- only works for two ants
 
 -- | Return the grid an ant perceives according to the fov
 fovGrid :: Grid -> AntNb -> Grid
-fovGrid g n = Grid (filter f $ food g) (filter f $ ants g)
+fovGrid g n = Grid (filter f $ food g) (filter f $ antPositions g)
   where f (x, y) = 
-          let (x', y') = ants g !! (pred n)
+          let (x', y') = antPositions g !! (pred n)
               x'' = abs $ x - x'
               y'' = abs $ y - y' 
               fov' = fov `div` 2
