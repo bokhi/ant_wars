@@ -1,5 +1,6 @@
 -- | This module contains functions to run matches between different implementations of ant behaviours
 module Game (Game(..)
+            , initGame
             ,  runGame
             , saveGame
             , tournament
@@ -8,8 +9,14 @@ module Game (Game(..)
 import Grid
 import Ant
 
-data Game
+data Game = Game {initialGrid :: Grid
+                 , grid :: Grid
+                 , ants :: [Ant]
+                 }
 
+-- | Initialise a game
+initGame = undefined                   
+                   
 -- | run a game between two ants     
 runGame = undefined 
 

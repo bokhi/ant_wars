@@ -5,26 +5,28 @@ module Grid (Grid(..)
             , rotateGrid
             , foodLeft
             , fovGrid
-            , Move
-            , Ant
+            , antCollision
+            , Direction
+            , AntNb
             ) where 
 
 import System.Random
 import Data.List
+import Data.Char
 
 dimension = 11
 nbFood = 15
 fov = 5
+antInitialPosition = [(5,  2), (5, 8)]
 
--- | The food is represented as a list of points on the grid, and the ants as two separate points
+-- | The food and ants are represented as lists of points on the grid
 data Grid = Grid { food :: [(Int, Int)]
-                 , ant1 :: (Int, Int)
-                 , ant2 :: (Int, Int)
+                 , ants :: [(Int, Int)]
                  } 
                             
 -- | This function generates a dimension*dimension grid containing nbFood pieces of food             
 generateGrid :: StdGen -> Grid                            
-generateGrid gen = Grid food (5,  2) (5, 8) 
+generateGrid gen = Grid food antInitialPosition
   where random = randomRs (0, (pred dimension)) gen :: [Int]
         food = generate random []
         generate random l = -- exactly nbFood pieces are wanted, they have to differ from each others and from the ants' positions
@@ -48,19 +50,15 @@ showGrid g =
       column  = intersperse ' ' (replicate (succ dimension) '|') ++ "\n"
       grid = intercalate column (replicate (succ dimension) row)
       grid' = foldl (\ g pos -> replaceNth (coord pos) 'F' g) grid (food g)
-      grid'' = replaceNth (coord $ ant1 g) '1' grid'
-      grid''' = replaceNth (coord $ ant2 g) '2' grid''
-  in grid'''
+      (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (ants g)
+  in grid''
      
 -- | The grid can be represented as a ASCII table, F for pieces of food, 1 and 2 for ant1 and ant2 respectively     
 instance Show Grid where
   show g = showGrid g
 
 -- | to express the motion an ant is able to do
-data Move = NW | N | NE | E | SE | S | SW | W deriving Eq
-
--- | to differentiate the two ants
-data Ant = Ant1 | Ant2 deriving Eq
+data Direction = NW | N | NE | E | SE | S | SW | W deriving Eq
 
 updatePos (x, y) m = 
   case m of 
@@ -75,30 +73,32 @@ updatePos (x, y) m =
 
 updateFood f p m = delete (updatePos p m) f
 
+type AntNb = Int
+
 -- | This function generates a new grid following the move of a specific ant
-updateGrid :: Grid -> Ant ->  Move -> Grid
-updateGrid g a m  = 
-  if a == Ant1
-  then Grid food' p (ant2 g)
-  else Grid food' (ant1 g) p
+updateGrid :: Grid -> AntNb -> Direction -> Grid
+updateGrid g n m  = 
+  Grid food' (replaceNth (pred n) pos' (ants g))
     where
-      f = food g
-      p = updatePos (if a == Ant1 then ant1 g else ant2 g) m
-      food' = delete p f
+      pos' = updatePos (ants g !! (pred n)) m
+      food' = delete pos' $ food g
 
 -- | 90' rotation of a grid
 rotateGrid :: Grid -> Grid
-rotateGrid g = Grid (map rotate (food g)) (rotate $ ant1 g) (rotate $ ant2 g)
+rotateGrid g = Grid (map rotate (food g)) (map rotate (ants g))
   where rotate (x, y) = (y, mod (-x - 1) dimension)      
         
 -- | Number of pieces of food on a grid        
 foodLeft g = length $ food g
 
+-- | Collision between the ants
+antCollision g = ants g !! 0 == ants g !! 1 -- only works for two ants
+
 -- | Return the grid an ant perceives according to the fov
-fovGrid :: Grid -> Ant -> Grid
-fovGrid g a = Grid (filter f $ food g) (ant1 g) (ant2 g)
+fovGrid :: Grid -> AntNb -> Grid
+fovGrid g n = Grid (filter f $ food g) (filter f $ ants g)
   where f (x, y) = 
-          let (x', y') = if a == Ant1 then ant1 g else ant2 g 
+          let (x', y') = ants g !! (pred n)
               x'' = abs $ x - x'
               y'' = abs $ y - y' 
               fov' = fov `div` 2
