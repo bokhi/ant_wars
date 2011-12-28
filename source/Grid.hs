@@ -1,9 +1,12 @@
 -- | This module contains the representation of a type Grid as well as functions to generate and modify grids
-module Grid (generateGrid
+module Grid (Grid(..)
+            , generateGrid
             , updateGrid
             , rotateGrid
             , foodLeft
             , fovGrid
+            , Move
+            , Ant
             ) where 
 
 import System.Random
@@ -53,8 +56,10 @@ showGrid g =
 instance Show Grid where
   show g = showGrid g
 
+-- | to express the motion an ant is able to do
 data Move = NW | N | NE | E | SE | S | SW | W deriving Eq
 
+-- | to differentiate the two ants
 data Ant = Ant1 | Ant2 deriving Eq
 
 updatePos (x, y) m = 
