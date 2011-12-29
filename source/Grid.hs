@@ -6,7 +6,7 @@ module Grid (Grid(..)
             , foodLeft
             , fovGrid
             , antCollision
-            , Direction
+            , Direction(..)
             , AntNb
             , replaceNth -- TODO : move to a helper function module
             ) where 
