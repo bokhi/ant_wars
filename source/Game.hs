@@ -60,8 +60,13 @@ winnerGame g = antNb (head $ sortBy (\ a a' -> compare (score a) (score a')) (an
 
 -- | run a set of games
 runMatch :: StdGen -> [Grid -> Direction] -> (AntNb, [Game])
-runMatch gen moves = undefined
---  game = runGame $ initGame gen moves
+runMatch gen moves = (if score 1 >= 3 then 1 else 2, games) -- Works only for two ants
+  where
+    grids = take nbMatch (generateGrids gen)
+    games = map (\ grid -> initGame grid moves) grids 
+    games' = map runGame games
+    winners = map winnerGame games'
+    score ant = foldl (\ nb sum -> if nb == ant then sum + 1 else sum) 0 winners
 
 -- | ant winner of a match
 winnerMatch :: [Game] -> AntNb
