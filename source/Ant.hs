@@ -11,6 +11,10 @@ data Ant = Ant {antNb :: AntNb
                , score :: Int
                , kill :: Bool
                , move :: Grid -> Direction}
+           
+instance Show Ant where
+  show a = show (antNb a) ++ show (score a) ++ show (directions a)
+
 
 -- | Initiate an ant given a move function and an id
 initAnt :: AntNb -> (Grid -> Direction) -> Ant
