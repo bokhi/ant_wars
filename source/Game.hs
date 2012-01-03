@@ -5,6 +5,7 @@ module Game (Game(..)
             , runMatch
             , saveGame
             , tournament
+            , saveStat
             ) where
 
 import System.Random
@@ -48,8 +49,15 @@ endGame :: Game -> Bool
 endGame g = any (\ a -> length (directions a) >= nbMove) (ants g)
             
 -- | Winner of a game
-winnerGame :: Game -> AntNb    
-winnerGame g = antNb (head $ sortBy (\ a a' -> compare (score a') (score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
+gameWinner :: Game -> AntNb    
+gameWinner g = antNb (head $ sortBy (\ a a' -> compare (score a') (score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
+
+-- | winner of a match
+matchWinner :: [Game] -> AntNb
+matchWinner m = if score 1 >= nbVictory then 1 else 2
+  where
+    winners = map gameWinner m
+    score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
 
 -- | run a game between two ants     
 runGame :: Game -> Game
@@ -61,17 +69,30 @@ runGame g = runGame' g 0
 
 -- | run a set of games
 runMatch :: StdGen -> [Grid -> Direction] -> (AntNb, [Game])
-runMatch gen moves = (if score 1 >= 3 then 1 else 2, games') -- Works only for two ants
+runMatch gen moves = (matchWinner games', games') -- Works only for two ants
   where
     grids = take nbMatch (generateGrids gen)
     games = map (\ grid -> initGame grid moves) grids 
     games' = map runGame games
-    winners = map winnerGame games'
-    score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
 
 -- | tournament between mutiple ants
 tournament = undefined
 
 -- | save a game to the filesystem
-saveGame :: Grid -> IO ()
-saveGame = undefined
+saveGame :: String -> Game -> IO ()
+saveGame file g = do 
+  appendFile file $ show g
+
+-- | Statistics extracted from a game
+gameStat :: Game -> String
+gameStat = undefined
+
+matchStat :: [Game] -> String
+matchStat m = undefined
+  where
+    totalScore a = foldl (\ sum as -> sum + score (as !! (pred a `mod` antNumber))) 0 (map (\ g -> ants g) m)
+    totalKill a =  foldl (\ sum as -> sum + if kill (as !! (pred a `mod` antNumber)) then 1 else 0) 0 (map (\ g -> ants g) m)
+
+-- | Save stats to a file
+saveStat :: String -> Game -> IO ()
+saveStat file g  = undefined
