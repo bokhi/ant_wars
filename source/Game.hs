@@ -14,13 +14,16 @@ import Grid
 import Ant
 
 nbMove = 35
-nbMatch = 5
-nbVictory = 3
+nbMatch = 3
+nbVictory = 2
 
 data Game = Game {initialGrid :: Grid
                  , grid :: Grid
                  , ants :: [Ant]
-                 } deriving Show
+                 } 
+                            
+instance Show Game where
+  show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
 
 -- | Initialise a game
 initGame :: Grid -> [Grid -> Direction] -> Game
@@ -43,12 +46,12 @@ updateGame g a = Game (initialGrid g) gr' (replaceNth (pred a) ant' (ants g))
 endGame :: Game -> Bool      
 endGame g = dead || end
   where
-    dead = any (\ a -> kill a)  $ ants g
+    dead = any (\ a -> kill a)  $ ants g -- Error ! a game does not end when an ant dies
     end = all (\ a -> length (directions a) >= nbMove) (ants g)
             
 -- | Winner of a game
 winnerGame :: Game -> AntNb    
-winnerGame g = antNb (head $ sortBy (\ a a' -> compare (score a) (score a')) (ants g)) -- TODO verify that 1 is winning in case of tie
+winnerGame g = antNb (head $ sortBy (\ a a' -> compare (score a') (score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
 
 -- | run a game between two ants     
 runGame :: Game -> Game

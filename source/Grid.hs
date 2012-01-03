@@ -51,8 +51,8 @@ instance Show Grid where
         row  = intersperse '-' (replicate (succ dimension) '+') ++ "\n"
         column  = intersperse ' ' (replicate (succ dimension) '|') ++ "\n"
         grid = intercalate column (replicate (succ dimension) row)
-        grid' = foldl (\ g pos -> replaceNth (coord pos) 'F' g) grid (food g)
-        (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (antPositions g)
+        grid' = foldl (\ g pos -> replaceNth (coord pos) 'F' g) grid (food g) -- add the food
+        (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (antPositions g) -- add the ants
     in grid''
 
 -- | This function generates a new grid following the move of a specific ant
@@ -74,7 +74,7 @@ updateGrid g n m  =
       pos' = updatePos (antPositions g !! (pred n)) m
       food' = delete pos' $ food g
 
--- | 90' rotation of a grid
+-- | 90' clockwise rotation of the grid
 rotateGrid :: Grid -> Grid
 rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g))
   where rotate (x, y) = (y, mod (-x - 1) dimension)      

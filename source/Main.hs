@@ -6,4 +6,4 @@ main :: IO ()
 main = do
   gen <- getStdGen
   let (winner, games) = runMatch gen [testMove, testMove]
-  putStrLn (show games)
+  putStrLn ("Games : \n" ++ show games ++ "\n winner : " ++ show winner)

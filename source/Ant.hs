@@ -13,7 +13,7 @@ data Ant = Ant {antNb :: AntNb
                , move :: Grid -> Direction}
            
 instance Show Ant where
-  show a = show (antNb a) ++ show (score a) ++ show (directions a)
+  show a = "Ant : " ++ show (antNb a) ++ "\n" ++ "Score : " ++ show (score a) ++ "\n" ++ "Directions : " ++ show (reverse (directions a)) ++ "\n"
 
 
 -- | Initiate an ant given a move function and an id
