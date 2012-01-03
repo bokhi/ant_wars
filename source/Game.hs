@@ -33,11 +33,11 @@ initGame gr mvs = Game gr gr a
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
 updateGame g a = 
-  if kill $ ants g !! (a `mod` 2) -- if the ant has been killed no update
+  if kill $ ants g !! (a `mod` antNumber) -- if the ant has been killed no update - works only for two ants
   then g
   else Game (initialGrid g) gr' (replaceNth (pred a) ant' (ants g))
     where
-      ant = ants g !! (pred a)
+      ant = ants g !! (pred a `mod` antNumber)
       gr = grid g
       (ant', gr') = updateAnt ant gr
     

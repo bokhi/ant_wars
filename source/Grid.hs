@@ -8,6 +8,7 @@ module Grid (Grid(..)
             , foodLeft
             , fovGrid
             , antCollision
+            , antNumber
             ) where 
 
 import System.Random
@@ -15,10 +16,11 @@ import Data.List
 import Data.Char
 import Helper
 
-dimension = 11
-nbFood = 15
-fov = 5
-antInitialPosition = [(5,  2), (5, 8)]
+dimension = 11 -- dimension of a grid
+nbFood = 15 -- initial number of pieces of food on a grid
+fov = 5 -- size of the field of view square 
+antNumber = 2 -- initial number of ants on a grid
+antInitialPosition = [(5,  2), (5, 8)] -- initial position of the ants on the grid
 
 -- | The food and ants are represented as lists of points on the grid
 data Grid = Grid { food :: [(Int, Int)]
@@ -28,6 +30,7 @@ data Grid = Grid { food :: [(Int, Int)]
 -- | to express the motion an ant is able to do
 data Direction = NW | N | NE | E | SE | S | SW | W deriving (Show, Eq)
 
+-- | a number associated to ant, 1 for ant1, 2 for ant2
 type AntNb = Int
 
 -- | Generate an infinite number of dimension*dimension grids containing nbFood pieces of food
@@ -71,7 +74,7 @@ updateGrid g n m  =
           SW -> (mod (x + 1) dimension, mod (y - 1) dimension)
           W -> (x, mod (y - 1) dimension)
       updateFood f p m = delete (updatePos p m) f
-      pos' = updatePos (antPositions g !! (pred n)) m
+      pos' = updatePos (antPositions g !! (pred n `mod` antNumber)) m
       food' = delete pos' $ food g
 
 -- | 90' clockwise rotation of the grid
@@ -89,7 +92,7 @@ antCollision g = antPositions g !! 0 == antPositions g !! 1 -- only works for tw
 fovGrid :: Grid -> AntNb -> Grid
 fovGrid g n = Grid (filter f $ food g) (filter f $ antPositions g)
   where f (x, y) = 
-          let (x', y') = antPositions g !! (pred n)
+          let (x', y') = antPositions g !! (pred n `mod` antNumber)
               x'' = abs $ x - x'
               y'' = abs $ y - y' 
               fov' = fov `div` 2
