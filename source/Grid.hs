@@ -30,7 +30,7 @@ data Grid = Grid { food :: [(Int, Int)]
                  } 
                             
 -- | to express the motion an ant is able to do
-data Direction = NW | N | NE | E | SE | S | SW | W deriving (Show, Eq)
+data Direction = NW | N | NE | E | SE | S | SW | W deriving (Show, Eq, Read)
 
 -- | a number associated to ant, 1 for ant1, 2 for ant2
 type AntNb = Int

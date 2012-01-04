@@ -36,7 +36,7 @@ updateGame :: Game -> AntNb -> Game
 updateGame g a = 
   if kill $ ants g !! (a `mod` antNumber) -- if the ant has been killed no update - works only for two ants
   then g
-  else Game (initialGrid g) gr' (replaceNth (pred a) ant' (ants g))
+  else Game (initialGrid g) gr' (replaceNth (pred a `mod` antNumber) ant' (ants g))
     where
       ant = ants g !! (pred a `mod` antNumber)
       gr = grid g
@@ -61,11 +61,11 @@ matchWinner m = if score 1 >= nbVictory then 1 else 2
 
 -- | run a game between two ants     
 runGame :: Game -> Game
-runGame g = runGame' g 0
+runGame g = runGame' g 1
   where
     runGame' g i = if endGame g 
                    then g
-                   else runGame' (updateGame g (succ i)) (succ i `mod` length (ants g))
+                   else runGame' (updateGame g i) (i `mod` antNumber + 1)
 
 -- | run a set of games
 runMatch :: StdGen -> [Grid -> Direction] -> (AntNb, [Game])

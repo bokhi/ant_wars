@@ -4,9 +4,11 @@ module Ant (Ant(..)
            , updateAnt
            , testMove
            , gready
+           , user
            ) where
 
 import Data.List
+import System.IO.Unsafe
 import Grid
 
 data Ant = Ant {antNb :: AntNb
@@ -28,7 +30,7 @@ updateAnt :: Ant -> Grid -> (Ant, Grid)
 updateAnt a g = 
   let direction = move a $ g
       g' = updateGrid g (antNb a) direction  
-  in (Ant (antNb a) (direction:(directions a)) (score a + (foodLeft g - foodLeft g')) (antCollision g') (move a), g')
+  in (Ant (antNb a) (direction:(directions a)) (score a + (foodLeft g - foodLeft g')) (antCollision g' || kill a) (move a), g')
 
 
 -- initAnt
@@ -49,4 +51,10 @@ gready a g = if null (food g') then NW else d
             
 -- | user input function        
 user :: AntNb -> Grid -> Direction
-user a g = undefined
+user a g = unsafePerformIO $ do
+  print g
+  d <- getLine
+  return (read d :: Direction)
+  where
+    g' = fovGrid g a
+    
