@@ -88,11 +88,14 @@ gameStat :: Game -> String
 gameStat = undefined
 
 matchStat :: [Game] -> String
-matchStat m = undefined
+matchStat m = show (matchWinner m) ++ " " ++ stat 1 ++ " " ++ stat 2 ++ "\n" -- Currently only support two ants.
   where
     totalScore a = foldl (\ sum as -> sum + score (as !! (pred a `mod` antNumber))) 0 (map (\ g -> ants g) m)
     totalKill a =  foldl (\ sum as -> sum + if kill (as !! (pred a `mod` antNumber)) then 1 else 0) 0 (map (\ g -> ants g) m)
-
+    totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
+    stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
+    
 -- | Save stats to a file
-saveStat :: String -> Game -> IO ()
-saveStat file g  = undefined
+saveStat :: String -> [Game] -> IO ()
+saveStat file m = do
+  appendFile file $ matchStat m
