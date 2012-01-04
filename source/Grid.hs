@@ -9,6 +9,8 @@ module Grid (Grid(..)
             , fovGrid
             , antCollision
             , antNumber
+            , distance
+            , updatePos
             ) where 
 
 import System.Random
@@ -63,7 +65,12 @@ updateGrid :: Grid -> AntNb -> Direction -> Grid
 updateGrid g n m  = 
   Grid food' (replaceNth (pred n) pos' (antPositions g))
     where
-      updatePos (x, y) m = 
+      updateFood f p m = delete (updatePos p m) f
+      pos' = updatePos (antPositions g !! (pred n `mod` antNumber)) m
+      food' = delete pos' $ food g
+      
+updatePos :: (Int, Int) -> Direction -> (Int, Int)
+updatePos (x, y) m = 
         case m of 
           NW -> (mod (x - 1) dimension, mod (y - 1) dimension)
           N -> (mod (x - 1) dimension, y)
@@ -73,9 +80,7 @@ updateGrid g n m  =
           S -> (mod (x + 1) dimension, y)
           SW -> (mod (x + 1) dimension, mod (y - 1) dimension)
           W -> (x, mod (y - 1) dimension)
-      updateFood f p m = delete (updatePos p m) f
-      pos' = updatePos (antPositions g !! (pred n `mod` antNumber)) m
-      food' = delete pos' $ food g
+
 
 -- | 90' clockwise rotation of the grid
 rotateGrid :: Grid -> Grid
@@ -98,6 +103,12 @@ fovGrid g n = Grid (filter f $ food g) (filter f $ antPositions g)
               fov' = fov `div` 2
           in (min x'' $ dimension - x'') <= fov' && (min y'' $ dimension - y'') <= fov'
            
-        
+-- | number of moves between two positions on the grid             
+distance :: (Int, Int) -> (Int, Int) -> Int
+distance (x, y) (x', y') =  max (min x'' $ dimension - x'') (min y'' $ dimension - y'')
+  where
+    x'' = abs $ x - x'
+    y'' = abs $ y - y' 
+   
           
            
