@@ -5,6 +5,7 @@ module Game (Game(..)
             , runMatch
             , saveGame
             , tournament
+            , matchStat
             , saveStat
             ) where
 
