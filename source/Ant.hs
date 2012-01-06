@@ -34,28 +34,24 @@ updateAnt a g = (Ant (antNb a) (direction:(directions a)) (score a + (foodLeft g
     g' = updateGrid g (antNb a) direction  
     collision = length (antPositions g) /= length (antPositions g')
 
-
-
--- initAnt
-
 -- | move test function
 testMove :: Grid -> Direction
 testMove g = NW
               
 -- | find the nearest piece of food
 gready :: AntNb -> Grid -> Direction
-gready a g = if null (food g') then NW else d
+gready a g = if null (food g') then NW else m
   where
     g' =  fovGrid g a
-    aPos = antPositions g !! (a `mod` length (antPositions g))
+    aPos = antPosition g' a
     distanceFood d = minimum $ map (distance (updatePos aPos d)) (food g')
-    ds = [N, NW, NE, E, W, S, SE, SW]
-    d = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
+    ds = [N, W, S, E, NE, NW, SW, SE]
+    m = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
             
 -- | user input function        
 user :: AntNb -> Grid -> Direction
 user a g = unsafePerformIO $ do
-  print g
+  print g'
   d <- getLine
   return (read d :: Direction)
   where
@@ -66,12 +62,10 @@ predator :: AntNb -> Grid -> Direction
 predator a g = 
   if length (antPositions g') >= 2 -- if there is a prey
   then d' 
-  else if null (food g') then NW else d
+  else gready a g
   where
     g' = fovGrid g a
-    aPos = antPositions g !! (a `mod` length (antPositions g))
-    distanceFood d = minimum $ map (distance (updatePos aPos d)) (food g')
-    ds = [N, NW, NE, E, W, S, SE, SW]
-    d = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
-    distancePrey d = minimum $ map (distance (updatePos aPos d)) [antPositions g' !! (succ a `mod` length (antPositions g'))]
+    aPos = antPosition g' a
+    ds = [N, W, S, E, NE, NW, SW, SE]
+    distancePrey d = minimum $ map (distance (updatePos aPos d)) [antPosition g' (succ a)]
     d' = minimumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds

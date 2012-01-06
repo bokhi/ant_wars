@@ -17,6 +17,7 @@ import Ant
 nbMove = 35
 nbMatch = 5
 nbVictory = 3
+antNumber = 2
 
 data Game = Game {initialGrid :: Grid
                  , grid :: Grid
@@ -34,15 +35,13 @@ initGame gr mvs = Game gr gr a
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
 updateGame g a = 
-  if kill $ ants g !! ((a + 1) `mod` antNumber) -- if the ant has been killed no update - works only for two ants
+  if kill $ ants g !! (succ a `mod` antNumber) -- if the ant has been killed no update - works only for two ants
   then g
   else Game (initialGrid g) gr' (replaceNth a ant' (ants g))
     where
       ant = ants g !! a
       gr = grid g
       (ant', gr') = updateAnt ant gr
-    
-
       
 -- | To test whether a game is over or not      
 endGame :: Game -> Bool      
@@ -54,7 +53,7 @@ gameWinner g = antNb (head $ sortBy (\ a a' -> compare (score a') (score a)) (an
 
 -- | winner of a match
 matchWinner :: [Game] -> AntNb
-matchWinner m = if score 1 >= nbVictory then 1 else 2
+matchWinner m = if score 0 >= nbVictory then 0 else 1
   where
     winners = map gameWinner m
     score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
@@ -88,10 +87,10 @@ gameStat :: Game -> String
 gameStat = undefined
 
 matchStat :: [Game] -> String
-matchStat m = show (matchWinner m) ++ " " ++ stat 1 ++ " " ++ stat 2 ++ "\n" -- Currently only support two ants.
+matchStat m = show (matchWinner m) ++ " " ++ stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
   where
-    totalScore a = foldl (\ sum as -> sum + score (as !! (pred a `mod` antNumber))) 0 (map (\ g -> ants g) m)
-    totalKill a =  foldl (\ sum as -> sum + if kill (as !! (pred a `mod` antNumber)) then 1 else 0) 0 (map (\ g -> ants g) m)
+    totalScore a = foldl (\ sum as -> sum + score (as !! a)) 0 (map (\ g -> ants g) m)
+    totalKill a =  foldl (\ sum as -> sum + if kill (as !! a) then 1 else 0) 0 (map (\ g -> ants g) m)
     totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
     stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
     
