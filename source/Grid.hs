@@ -67,9 +67,12 @@ antPosition g a = antPositions g !! (a `mod` length (antPositions g))
 -- | This function generates a new grid following the move of a specific ant
 updateGrid :: Grid -> AntNb -> Direction -> Grid
 updateGrid g a m  = 
-  if collision 
-  then Grid (food g) [pos']
-  else Grid food' (replaceNth a pos' (antPositions g))
+  if length (antPositions g) > 1 -- two player
+  then 
+    if collision 
+    then Grid (food g) [pos'] -- only one ant left
+    else Grid food' (replaceNth a pos' (antPositions g))
+  else Grid food' [pos']
     where
       updateFood f p m = delete (updatePos p m) f
       pos' = updatePos (antPosition g a) m
@@ -100,16 +103,13 @@ foodLeft g = length $ food g
 fovGrid :: Grid -> AntNb -> Grid
 fovGrid g a = Grid (filter f $ food g) (filter f $ antPositions g)
   where 
-    f pos = distance pos pos' <= fov'
+    f pos = distance pos' pos <= fov'
     pos' =  antPosition g a
     fov' = fov `div` 2
         
--- | number of moves between two positions on the grid             
+-- | minimum number of moves between two positions on the grid             
 distance :: (Int, Int) -> (Int, Int) -> Int
 distance (x, y) (x', y') =  max (min x'' $ dimension - x'') (min y'' $ dimension - y'')
   where
     x'' = abs $ x - x'
     y'' = abs $ y - y' 
-   
-          
-           

@@ -57,7 +57,7 @@ user a g = unsafePerformIO $ do
   where
     g' = fovGrid g a
     
--- | pursue the opponent if present within the fov, otherwize move towards the nearest piece of food
+-- | pursue the opponent if present within the fov, otherwise move towards the nearest piece of food
 predator :: AntNb -> Grid -> Direction
 predator a g = 
   if length (antPositions g') >= 2 -- if there is a prey
@@ -67,5 +67,5 @@ predator a g =
     g' = fovGrid g a
     aPos = antPosition g' a
     ds = [N, W, S, E, NE, NW, SW, SE]
-    distancePrey d = minimum $ map (distance (updatePos aPos d)) [antPosition g' (succ a)]
+    distancePrey d = distance (updatePos aPos d) (antPosition g' (succ a))
     d' = minimumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds
