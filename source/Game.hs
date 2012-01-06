@@ -29,16 +29,16 @@ instance Show Game where
 -- | Initialise a game
 initGame :: Grid -> [Grid -> Direction] -> Game
 initGame gr mvs = Game gr gr a
-  where a = map (\ (mv, i) -> initAnt i mv) $ zip mvs [1..]
+  where a = map (\ (mv, i) -> initAnt i mv) $ zip mvs [0..]
 
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
 updateGame g a = 
-  if kill $ ants g !! (a `mod` antNumber) -- if the ant has been killed no update - works only for two ants
+  if kill $ ants g !! ((a + 1) `mod` antNumber) -- if the ant has been killed no update - works only for two ants
   then g
-  else Game (initialGrid g) gr' (replaceNth (pred a `mod` antNumber) ant' (ants g))
+  else Game (initialGrid g) gr' (replaceNth a ant' (ants g))
     where
-      ant = ants g !! (pred a `mod` antNumber)
+      ant = ants g !! a
       gr = grid g
       (ant', gr') = updateAnt ant gr
     
@@ -61,11 +61,11 @@ matchWinner m = if score 1 >= nbVictory then 1 else 2
 
 -- | run a game between two ants     
 runGame :: Game -> Game
-runGame g = runGame' g 1
+runGame g = runGame' g 0
   where
     runGame' g i = if endGame g 
                    then g
-                   else runGame' (updateGame g i) (i `mod` antNumber + 1)
+                   else runGame' (updateGame g i) (succ i `mod` antNumber)
 
 -- | run a set of games
 runMatch :: StdGen -> [Grid -> Direction] -> (AntNb, [Game])

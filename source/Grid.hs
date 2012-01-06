@@ -21,10 +21,11 @@ import Helper
 dimension = 11 -- dimension of a grid
 nbFood = 15 -- initial number of pieces of food on a grid
 fov = 5 -- size of the field of view square 
-antNumber = 2 -- initial number of ants on a grid
+antNumber = 2 :: Int -- initial number of ants on a grid
 antInitialPosition = [(5,  2), (5, 8)] -- initial position of the ants on the grid
 
 -- | The food and ants are represented as lists of points on the grid
+-- eaten food and killed ants are removed from the lists
 data Grid = Grid { food :: [(Int, Int)]
                  , antPositions :: [(Int, Int)]
                  } 
@@ -32,24 +33,25 @@ data Grid = Grid { food :: [(Int, Int)]
 -- | to express the motion an ant is able to do
 data Direction = NW | N | NE | E | SE | S | SW | W deriving (Show, Eq, Read)
 
--- | a number associated to ant, 1 for ant1, 2 for ant2
+-- | a number associated to ant, 0 for ant1, 1 for ant2
 type AntNb = Int
 
 -- | Generate an infinite number of dimension*dimension grids containing nbFood pieces of food
 generateGrids :: StdGen -> [Grid]
 generateGrids gen = generateGrids' (randomRs (0, (pred dimension)) gen :: [Int])
   where
-      generateFood random l = -- exactly nbFood pieces are wanted, they have to differ from each others and from the ants' positions
+    generateFood random l = -- exactly nbFood pieces are wanted, they have to differ from each other and from the ants' positions
         if length l == nbFood
         then (l, random)
-        else let (x:x':xs) = random in 
-        if (x, x') `elem` l || (x, x') == (5, 2) || (x, x') == (5, 8)
-        then generateFood xs l
-        else generateFood xs ((x, x'):l)
-      generateGrids' random = Grid food antInitialPosition : generateGrids' random'
+        else 
+          let (x:x':xs) = random in 
+          if (x, x') `elem` l || (x, x') == (5, 2) || (x, x') == (5, 8)
+          then generateFood xs l
+          else generateFood xs ((x, x'):l)
+    generateGrids' random = (Grid food antInitialPosition):generateGrids' random'
         where (food, random') = generateFood random []
 
--- | The grid can be represented as a ASCII table, F for pieces of food, 1 and 2 for ant1 and ant2 respectively     
+-- | The grid can be represented as a ASCII table, F for pieces of food, 0 and 1 for ant0 and ant1 respectively     
 instance Show Grid where
   show g =   
     let coord (x, y) = (succ dimension)*2*(2*x + 1) + 2*y + 1 -- translate a point to its position in the ascii table
@@ -57,17 +59,21 @@ instance Show Grid where
         column  = intersperse ' ' (replicate (succ dimension) '|') ++ "\n"
         grid = intercalate column (replicate (succ dimension) row)
         grid' = foldl (\ g pos -> replaceNth (coord pos) 'F' g) grid (food g) -- add the food
-        (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 1) (antPositions g) -- add the ants
+        (grid'', _) = foldl (\ (g, n) pos -> (replaceNth (coord pos) (intToDigit n) g, succ n)) (grid', 0) (antPositions g) -- add the ants
     in grid''
 
 -- | This function generates a new grid following the move of a specific ant
 updateGrid :: Grid -> AntNb -> Direction -> Grid
-updateGrid g n m  = 
-  Grid food' (replaceNth (pred n) pos' (antPositions g))
+updateGrid g a m  = 
+  if collision 
+  then Grid (food g) [pos']
+  else Grid food' (replaceNth (a `mod` length (antPositions g)) pos' (antPositions g))
     where
       updateFood f p m = delete (updatePos p m) f
-      pos' = updatePos (antPositions g !! (pred n `mod` antNumber)) m
+      pos' = updatePos (antPositions g !! (a `mod` length (antPositions g))) m
       food' = delete pos' $ food g
+      collision = length (antPositions g) > 1 && pos' == antPositions g !! (succ a `mod` length (antPositions g))
+
       
 updatePos :: (Int, Int) -> Direction -> (Int, Int)
 updatePos (x, y) m = 
@@ -91,17 +97,20 @@ rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g))
 foodLeft g = length $ food g
 
 -- | Collision between the ants
-antCollision g = antPositions g !! 0 == antPositions g !! 1 -- only works for two ants
+antCollision g = 
+  if length (antPositions g) < 2
+  then False
+  else antPositions g !! 0 == antPositions g !! 1 -- only works for two ants
+
 
 -- | Return the grid an ant perceives according to the fov
 fovGrid :: Grid -> AntNb -> Grid
-fovGrid g n = Grid (filter f $ food g) (filter f $ antPositions g)
-  where f (x, y) = 
-          let (x', y') = antPositions g !! (pred n `mod` antNumber)
-              x'' = abs $ x - x'
-              y'' = abs $ y - y' 
-              fov' = fov `div` 2
-          in (min x'' $ dimension - x'') <= fov' && (min y'' $ dimension - y'') <= fov'
+fovGrid g a = Grid (filter f $ food g) (filter f $ antPositions g)
+  where 
+    f pos = distance pos pos' <= fov'
+    pos' =  antPositions g !! (a `mod` length (antPositions g))
+    fov' = fov `div` 2
+        
            
 -- | number of moves between two positions on the grid             
 distance :: (Int, Int) -> (Int, Int) -> Int
