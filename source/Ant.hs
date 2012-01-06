@@ -37,8 +37,8 @@ updateAnt a g = (Ant (antNb a) (direction:(directions a)) (score a + (foodLeft g
     collision = length (antPositions g) /= length (antPositions g')
 
 -- | move test function
-testMove :: Grid -> Direction
-testMove g = NW
+testMove :: AntNb -> Grid -> Direction
+testMove a g = NW
               
 -- | find the nearest piece of food
 gready :: AntNb -> Grid -> Direction

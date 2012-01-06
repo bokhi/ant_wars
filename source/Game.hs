@@ -28,9 +28,9 @@ instance Show Game where
   show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
 
 -- | Initialise a game
-initGame :: Grid -> [Grid -> Direction] -> Game
+initGame :: Grid -> [AntNb -> Grid -> Direction] -> Game
 initGame gr mvs = Game gr gr a
-  where a = map (\ (mv, i) -> initAnt i mv) $ zip mvs [0..]
+  where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0..]
 
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
@@ -67,15 +67,19 @@ runGame g = runGame' g 0
                    else runGame' (updateGame g i) (succ i `mod` antNumber)
 
 -- | run a set of games
-runMatch :: StdGen -> [Grid -> Direction] -> (AntNb, [Game])
-runMatch gen moves = (matchWinner games', games') -- Works only for two ants
+runMatch :: [Grid] -> [AntNb -> Grid -> Direction] -> (AntNb, [Game])
+runMatch gs moves = (matchWinner games', games') -- Works only for two ants
   where
-    grids = take nbMatch (generateGrids gen)
+    grids = take nbMatch gs
     games = map (\ grid -> initGame grid moves) grids 
     games' = map runGame games
+    
+    
 
 -- | tournament between mutiple ants
-tournament = undefined
+tournament :: [Grid] -> [AntNb -> Grid -> Direction] -> [(AntNb, [Game])]
+tournament gs moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (pair moves)
+
 
 -- | save a game to the filesystem
 saveGame :: String -> Game -> IO ()
