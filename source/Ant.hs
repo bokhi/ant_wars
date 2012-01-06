@@ -6,6 +6,7 @@ module Ant (Ant(..)
            , gready
            , user
            , predator
+           , hider
            ) where
 
 import Data.List
@@ -60,12 +61,26 @@ user a g = unsafePerformIO $ do
 -- | pursue the opponent if present within the fov, otherwise move towards the nearest piece of food
 predator :: AntNb -> Grid -> Direction
 predator a g = 
-  if length (antPositions g') >= 2 -- if there is a prey
+  if length (antPositions g') > 1 -- if there is a prey
   then d' 
   else gready a g
-  where
-    g' = fovGrid g a
-    aPos = antPosition g' a
-    ds = [N, W, S, E, NE, NW, SW, SE]
-    distancePrey d = distance (updatePos aPos d) (antPosition g' (succ a))
-    d' = minimumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds
+    where
+      g' = fovGrid g a
+      aPos = antPosition g' a
+      ds = [N, W, S, E, NE, NW, SW, SE]
+      distancePrey d = distance (updatePos aPos d) (antPosition g' (succ a))
+      d' = minimumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds
+    
+-- | try to escape if an opponent is present within the fov, otherwise gready strategy
+hider :: AntNb -> Grid -> Direction
+hider a g = 
+  if length (antPositions g') > 1
+  then d'
+  else gready a g
+    where   
+      g' = fovGrid g a
+      aPos = antPosition g' a
+      ds = [N, W, S, E, NE, NW, SW, SE]
+      distancePrey d = distance (updatePos aPos d) (antPosition g' (succ a))
+      d' = maximumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds
+      
