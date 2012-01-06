@@ -7,6 +7,7 @@ module Ant (Ant(..)
            , user
            , predator
            , hider
+           , wise
            ) where
 
 import Data.List
@@ -83,4 +84,21 @@ hider a g =
       ds = [N, W, S, E, NE, NW, SW, SE]
       distancePrey d = distance (updatePos aPos d) (antPosition g' (succ a))
       d' = maximumBy (\ d d' -> compare (distancePrey d) (distancePrey d')) ds
+      
+-- | choose to escape if the opponent is closer than the closest piece of food      
+wise :: AntNb -> Grid -> Direction      
+wise a g = 
+  if length (antPositions g') > 1 && not (null (food g'))
+  then 
+    if distanceOpponent < distanceFood
+    then hider a g
+    else gready a g
+  else gready a g
+    where   
+      g' = fovGrid g a
+      aPos = antPosition g' a
+      distanceFood = minimum $ map (distance aPos) (food g')
+      distanceOpponent = distance aPos (antPosition g' (succ a))
+
+  
       
