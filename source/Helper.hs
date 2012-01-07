@@ -3,6 +3,7 @@ module Helper (replaceNth
               , couple
               , pair
               , group'
+              , cartProd
               ) where
 
 import Data.List
@@ -25,3 +26,5 @@ group' :: Int -> [a] -> [[a]]
 group' n xs = xs':group' n xs''
   where
     (xs', xs'') = splitAt n xs
+    
+cartProd xs ys = [(x, y) | x <- xs, y <- ys]    

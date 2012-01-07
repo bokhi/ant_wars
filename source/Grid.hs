@@ -2,6 +2,9 @@
 module Grid (Grid(..)
             , Direction(..)
             , AntNb
+            , dimension
+            , fov
+            , antInitialPositions
             , generateGrids
             , antPosition
             , updateGrid
