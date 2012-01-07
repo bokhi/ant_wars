@@ -4,6 +4,7 @@ module Ant (Ant(..)
            , updateAnt
            , testMove
            , gready
+           , gready'
            , user
            , predator
            , hider
@@ -32,8 +33,9 @@ initAnt a m = Ant a [] 0 False m (initMemory a)
 
 -- | Move an ant on a grid to update the ant and grid structure
 updateAnt :: Ant -> Grid -> (Ant, Grid)
-updateAnt a g = (Ant (antNb a) (direction:(directions a)) (Ant.score a + (foodLeft g - foodLeft g')) (collision || kill a) (move a) (updateMemory (memory a) (antNb a) g') , g') -- careful not to update a dead ant
+updateAnt a g = (Ant (antNb a) (direction:(directions a)) (Ant.score a + (foodLeft g - foodLeft g')) (collision || kill a) (move a) memory' , g') -- careful not to update a dead ant
   where 
+    memory' = updateMemory (memory a) (antNb a) g
     direction = (move a) (memory a) g
     g' = updateGrid g (antNb a) direction  
     collision = length (antPositions g) /= length (antPositions g')
@@ -43,7 +45,7 @@ testMove :: AntNb -> Memory -> Grid -> Direction
 testMove a m g = NW
               
 -- | find the nearest piece of food
-gready :: AntNb -> Memory -> Grid -> Direction
+
 gready a m g = if null (food g') then NW else m
   where
     g' =  fovGrid g a
@@ -51,6 +53,16 @@ gready a m g = if null (food g') then NW else m
     distanceFood d = minimum $ map (distance (updatePos aPos d)) (food g')
     ds = [N, W, S, E, NE, NW, SW, SE]
     m = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
+    
+gready' :: AntNb -> Memory -> Grid -> Direction    
+gready' a m g = if null (food g') then NW else mo
+  where
+    g' =  memoryGrid (updateMemory m a g) (fovGrid g a) 
+    aPos = antPosition g' a
+    distanceFood d = minimum $ map (distance (updatePos aPos d)) (food g')
+    ds = [N, W, S, E, NE, NW, SW, SE]
+    mo = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
+    
             
 -- | user input function        
 user :: AntNb -> Memory -> Grid -> Direction

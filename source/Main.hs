@@ -7,9 +7,9 @@ main :: IO ()
 main = do
   gen <- getStdGen
   let grids = generateGrids gen
-  let (winner, games) = runMatch grids [wise, predator]
+  let (winner, games) = runMatch grids [gready, gready']
   putStrLn ("Games : \n" ++ show games ++ "\n winner : " ++ show winner)
-  mapM (saveGame "game.txt") games
-  saveStat "stat.txt" $ games
-  let tour = snd $ unzip $ tournament grids [testMove, gready, predator, hider, wise]
-  putStrLn $ concat $ map matchStat tour
+  -- mapM (saveGame "game.txt") games
+  -- saveStat "stat.txt" $ games
+  -- let tour = snd $ unzip $ tournament grids [testMove, gready, predator, hider, wise]
+  -- putStrLn $ concat $ map matchStat tour
