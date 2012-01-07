@@ -14,6 +14,7 @@ import Data.List
 import Helper
 import Grid
 import Ant
+import Memory
 
 nbMove = 35
 nbMatch = 5
@@ -29,7 +30,7 @@ instance Show Game where
   show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
 
 -- | Initialise a game
-initGame :: Grid -> [AntNb -> Grid -> Direction] -> Game
+initGame :: Grid -> [AntNb -> Memory -> Grid -> Direction] -> Game
 initGame gr mvs = Game gr gr a
   where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0..]
 
@@ -68,7 +69,7 @@ runGame g = runGame' g 0
                    else runGame' (updateGame g i) (succ i `mod` antNumber)
 
 -- | run a set of games
-runMatch :: [Grid] -> [AntNb -> Grid -> Direction] -> (AntNb, [Game])
+runMatch :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> (AntNb, [Game])
 runMatch gs moves = (matchWinner games', games') -- Works only for two ants
   where
     grids = take nbMatch gs
@@ -78,7 +79,7 @@ runMatch gs moves = (matchWinner games', games') -- Works only for two ants
     
 
 -- | tournament between mutiple ants
-tournament :: [Grid] -> [AntNb -> Grid -> Direction] -> [(AntNb, [Game])]
+tournament :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> [(AntNb, [Game])]
 tournament gs moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (pair moves)
 
 

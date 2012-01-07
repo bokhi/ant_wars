@@ -27,7 +27,7 @@ updateMemory :: Memory -> AntNb -> Grid -> Memory
 updateMemory m a g = Memory foods'' tracks' 
   where 
     foods' = map (\ xs -> xs \\ fovFilter) (foods m) -- we update the previous states according to the current fov 
-    foods'' = take memoryFood foods' -- time to forget about some previous states
+    foods'' = take memoryFood (food g):foods' -- time to forget about some previous states
     tracks' = take memoryTrack $ antPosition g a : tracks m
     fovFilter = fovList $ antPosition g a
     
@@ -42,7 +42,7 @@ fovList (x, y) = cartProd xs ys
     
 -- | use memory to modify the perception of a grid
 memoryGrid :: Memory  -> Grid -> Grid
-memoryGrid m g = Grid food' (antPositions g) 
+memoryGrid m g = Grid food' (antPositions g) (score g)
   where
     food' = nub $ concat $ foods m
     
