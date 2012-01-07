@@ -3,6 +3,7 @@ module Grid (Grid(..)
             , Direction(..)
             , AntNb
             , dimension
+            , nbFood
             , fov
             , antInitialPositions
             , generateGrids

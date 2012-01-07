@@ -9,6 +9,7 @@ module Ant (Ant(..)
            , predator
            , hider
            , wise
+           , precautionary
            ) where
 
 import Data.List
@@ -63,7 +64,6 @@ gready' a m g = if null (food g') then NW else mo
     ds = [N, W, S, E, NE, NW, SW, SE]
     mo = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds
     
-            
 -- | user input function        
 user :: AntNb -> Memory -> Grid -> Direction
 user a m g = unsafePerformIO $ do
@@ -114,5 +114,10 @@ wise a m g =
       distanceFood = minimum $ map (distance aPos) (food g')
       distanceOpponent = distance aPos (antPosition g' (succ a))
 
-  
-      
+-- | avoid to being killed before a certain score 
+precautionary :: AntNb -> Memory -> Grid -> Direction      
+precautionary a m g = 
+  if length (antPositions g') > 1 && Grid.score g !! a < nbFood `div` 2
+  then wise a m g
+  else gready a m g
+    where g' = fovGrid g a
