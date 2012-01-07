@@ -29,6 +29,7 @@ antInitialPositions = [(5,  2), (5, 8)] -- initial position of the ants on the g
 -- eaten food and killed ants are removed from the lists
 data Grid = Grid { food :: [(Int, Int)]
                  , antPositions :: [(Int, Int)]
+                 , score :: [Int]
                  } 
                             
 -- | to express the motion an ant is able to do
@@ -49,7 +50,7 @@ generateGrids gen = generateGrids' (randomRs (0, (pred dimension)) gen :: [Int])
           if (x, x') `elem` l || (x, x') `elem` antInitialPositions 
           then generateFood xs l
           else generateFood xs ((x, x'):l)
-    generateGrids' random = (Grid food antInitialPositions):generateGrids' random'
+    generateGrids' random = (Grid food antInitialPositions [0, 0]):generateGrids' random'
         where (food, random') = generateFood random []
 
 -- | The grid can be represented as a ASCII table, F for pieces of food, 0 and 1 for ant0 and ant1 respectively     
@@ -73,10 +74,11 @@ updateGrid g a m  =
   if length (antPositions g) > 1 -- two player
   then 
     if collision 
-    then Grid (food g) [pos'] -- only one ant left
-    else Grid food' (replaceNth a pos' (antPositions g))
-  else Grid food' [pos']
+    then Grid (food g) [pos'] (score g) -- only one ant left
+    else Grid food' (replaceNth a pos' (antPositions g)) score'
+  else Grid food' [pos'] score'
     where
+      score' = replaceNth a (score g !! a + ((length (food g)) - (length food'))) (score g)
       updateFood f p m = delete (updatePos p m) f
       pos' = updatePos (antPosition g a) m
       food' = delete pos' $ food g
@@ -96,7 +98,7 @@ updatePos (x, y) m =
 
 -- | 90' clockwise rotation of the grid
 rotateGrid :: Grid -> Grid
-rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g))
+rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g)) (score g)
   where rotate (x, y) = (y, mod (-x - 1) dimension)      
         
 -- | Number of pieces of food on a grid        
@@ -104,7 +106,7 @@ foodLeft g = length $ food g
 
 -- | Return the grid an ant perceives according to the fov
 fovGrid :: Grid -> AntNb -> Grid
-fovGrid g a = Grid (filter f $ food g) (filter f $ antPositions g)
+fovGrid g a = Grid (filter f $ food g) (filter f $ antPositions g) (score g)
   where 
     f pos = distance pos' pos <= fov'
     pos' =  antPosition g a

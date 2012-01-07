@@ -21,7 +21,7 @@ data Ant = Ant {antNb :: AntNb
                , move :: Grid -> Direction}
            
 instance Show Ant where
-  show a = "Ant : " ++ show (antNb a) ++ "\n" ++ "Score : " ++ show (score a) ++ "\n" ++ "Directions : " ++ show (reverse (directions a)) ++ "\n"
+  show a = "Ant : " ++ show (antNb a) ++ "\n" ++ "Score : " ++ show (Ant.score a) ++ "\n" ++ "Directions : " ++ show (reverse (directions a)) ++ "\n"
 
 
 -- | Initiate an ant given a move function and an id
@@ -30,7 +30,7 @@ initAnt a m = Ant a [] 0 False m
 
 -- | Move an ant on a grid to update the ant and grid structure
 updateAnt :: Ant -> Grid -> (Ant, Grid)
-updateAnt a g = (Ant (antNb a) (direction:(directions a)) (score a + (foodLeft g - foodLeft g')) (collision || kill a) (move a), g') -- careful not to update a dead ant
+updateAnt a g = (Ant (antNb a) (direction:(directions a)) (Ant.score a + (foodLeft g - foodLeft g')) (collision || kill a) (move a), g') -- careful not to update a dead ant
   where 
     direction = move a $ g
     g' = updateGrid g (antNb a) direction  

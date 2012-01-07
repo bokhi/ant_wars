@@ -50,7 +50,7 @@ endGame g = any (\ a -> length (directions a) >= nbMove) (ants g)
             
 -- | Winner of a game
 gameWinner :: Game -> AntNb    
-gameWinner g = antNb (head $ sortBy (\ a a' -> compare (score a') (score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
+gameWinner g = antNb (head $ sortBy (\ a a' -> compare (Ant.score a') (Ant.score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
 
 -- | winner of a match
 matchWinner :: [Game] -> AntNb
@@ -94,7 +94,7 @@ gameStat = undefined
 matchStat :: [Game] -> String
 matchStat m = show (matchWinner m) ++ " " ++ stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
   where
-    totalScore a = foldl (\ sum as -> sum + score (as !! a)) 0 (map (\ g -> ants g) m)
+    totalScore a = foldl (\ sum as -> sum + Ant.score (as !! a)) 0 (map (\ g -> ants g) m)
     totalKill a =  foldl (\ sum as -> sum + if kill (as !! a) then 1 else 0) 0 (map (\ g -> ants g) m)
     totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
     stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
