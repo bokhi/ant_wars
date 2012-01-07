@@ -3,6 +3,7 @@ module Memory (Memory(..)
                , initMemory
                , updateMemory
                , memoryGrid
+               , foodMemory
                ) where
 
 import Data.List
@@ -19,17 +20,16 @@ data Memory = Memory { foods :: [[(Int, Int)]]
                                 
 -- | initialise the memory of an ant                                
 initMemory :: AntNb -> Memory                                
-initMemory a = Memory [[]] [antInitialPositions !! a]
+initMemory a = Memory [[]] [antInitialPositions !! a] 
               
 -- | store grid information into memory              
 updateMemory :: Memory -> AntNb -> Grid -> Memory              
-updateMemory m a g = Memory foods'' tracks'
+updateMemory m a g = Memory foods'' tracks' 
   where 
     foods' = map (\ xs -> xs \\ fovFilter) (foods m) -- we update the previous states according to the current fov 
     foods'' = take memoryFood foods' -- time to forget about some previous states
     tracks' = take memoryTrack $ antPosition g a : tracks m
     fovFilter = fovList $ antPosition g a
-
     
 -- | return a list of cases corresponding to a fov
 fovList :: (Int, Int) -> [(Int, Int)]
@@ -41,5 +41,11 @@ fovList (x, y) = cartProd xs ys
     ys = tor [(y - fov')..(y + fov')]
     
 -- | use memory to modify the perception of a grid
-memoryGrid :: Memory -> AntNb -> Grid -> Grid
-memoryGrid m g = undefined
+memoryGrid :: Memory  -> Grid -> Grid
+memoryGrid m g = Grid food' (antPositions g) 
+  where
+    food' = nub $ concat $ foods m
+    
+-- | list piece of food that might still be on the grid
+foodMemory :: Memory -> [(Int, Int)]    
+foodMemory m = nub $ concat $ foods m
