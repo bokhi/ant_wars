@@ -5,6 +5,7 @@ module Game (Game(..)
             , runMatch
             , saveGame
             , tournament
+            , matchPercentage
             , matchStat
             , saveStat
             ) where
@@ -17,8 +18,7 @@ import Ant
 import Memory
 
 nbMove = 35
-nbMatch = 5
-nbVictory = 3
+nbMatch = 1000
 antNumber = 2
 
 data Game = Game {initialGrid :: Grid
@@ -49,17 +49,6 @@ updateGame g a =
 endGame :: Game -> Bool      
 endGame g = any (\ a -> length (directions a) >= nbMove) (ants g)
             
--- | Winner of a game
-gameWinner :: Game -> AntNb    
-gameWinner g = antNb (head $ sortBy (\ a a' -> compare (Ant.score a') (Ant.score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
-
--- | winner of a match
-matchWinner :: [Game] -> AntNb
-matchWinner m = if score 0 >= nbVictory then 0 else 1
-  where
-    winners = map gameWinner m
-    score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
-
 -- | run a game between two ants     
 runGame :: Game -> Game
 runGame g = runGame' g 0
@@ -67,33 +56,36 @@ runGame g = runGame' g 0
     runGame' g i = if endGame g 
                    then g
                    else runGame' (updateGame g i) (succ i `mod` antNumber)
+-- | Winner of a game
+gameWinner :: Game -> AntNb    
+gameWinner g = antNb (head $ sortBy (\ a a' -> compare (Ant.score a') (Ant.score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
 
 -- | run a set of games
-runMatch :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> (AntNb, [Game])
-runMatch gs moves = (matchWinner games', games') -- Works only for two ants
+runMatch :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> [Game]
+runMatch gs moves = games' -- Works only for two ants
   where
     grids = take nbMatch gs
     games = map (\ grid -> initGame grid moves) grids 
     games' = map runGame games
-    
-    
 
+-- | Percentage of victory    
+matchPercentage :: [Game] -> Float
+matchPercentage m = score 0 / (fromIntegral nbMatch)
+  where 
+    winners = map gameWinner m
+    score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
+    
 -- | tournament between mutiple ants
-tournament :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> [(AntNb, [Game])]
-tournament gs moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (pair moves)
-
+tournament :: [Grid] -> ([AntNb -> Memory -> Grid -> Direction] -> [[AntNb -> Memory -> Grid -> Direction]]) -> [AntNb -> Memory -> Grid -> Direction] -> [[Game]]
+tournament gs selection moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (selection moves)
 
 -- | save a game to the filesystem
 saveGame :: String -> Game -> IO ()
 saveGame file g = do 
   appendFile file $ show g
 
--- | Statistics extracted from a game
-gameStat :: Game -> String
-gameStat = undefined
-
 matchStat :: [Game] -> String
-matchStat m = show (matchWinner m) ++ " " ++ stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
+matchStat m = stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
   where
     totalScore a = foldl (\ sum as -> sum + Ant.score (as !! a)) 0 (map (\ g -> ants g) m)
     totalKill a =  foldl (\ sum as -> sum + if kill (as !! a) then 1 else 0) 0 (map (\ g -> ants g) m)

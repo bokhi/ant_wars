@@ -1,7 +1,10 @@
 -- | This module contains helper functions needed by other modules
 module Helper (replaceNth
               , couple
-              , pair
+              , selection1
+              , selection2
+              , selection3
+              , selection4
               , group'
               , cartProd
               ) where
@@ -17,9 +20,15 @@ replaceNth n newVal (x:xs)
 couple :: a -> [a] -> [[a]]                
 couple x xs = map (\ x' -> [x, x']) xs
 
-pair :: [a] -> [[a]]
-pair [x] = []
-pair (x:xs) = (couple x xs) ++ (pair xs)
+selection1 xs = [[x, x] | x <- xs]
+
+selection2 xs = cartProd xs xs
+
+selection3 [x] = [[x, x]]
+selection3 xs = couple (head xs) xs ++ selection3 (tail xs)
+
+selection4 [x] = []
+selection4 (x:xs) = (couple x xs) ++ (selection4 xs)
   
               
 group' :: Int -> [a] -> [[a]]
