@@ -22,7 +22,7 @@ couple x xs = map (\ x' -> [x, x']) xs
 
 selection1 xs = [[x, x] | x <- xs]
 
-selection2 xs = cartProd xs xs
+selection2 xs = [[x, y] | x <- xs, y <- xs]
 
 selection3 [x] = [[x, x]]
 selection3 xs = couple (head xs) xs ++ selection3 (tail xs)
