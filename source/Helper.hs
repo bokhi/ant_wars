@@ -5,6 +5,7 @@ module Helper (replaceNth
               , selection2
               , selection3
               , selection4
+              , selection5
               , group'
               , cartProd
               ) where
@@ -29,6 +30,8 @@ selection3 xs = couple (head xs) xs ++ selection3 (tail xs)
 
 selection4 [x] = []
 selection4 (x:xs) = (couple x xs) ++ (selection4 xs)
+
+selection5 (x:xs) = couple x xs
   
               
 group' :: Int -> [a] -> [[a]]

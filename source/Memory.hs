@@ -11,24 +11,23 @@ import Helper
 import Grid
 
 
-memoryFood = 10 -- number of fovs a ant can remember related to food
-memoryTrack = 10 -- number of previous moves an ant can remember
-
 data Memory = Memory { foods :: [[(Int, Int)]]
                      , tracks :: [(Int, Int)]
+                     , memoryFood :: Int -- number of fovs a ant can remember related to food
+                     , memoryTrack :: Int  -- number of previous moves an ant can remember
                      } deriving Show
                                 
 -- | initialise the memory of an ant                                
-initMemory :: AntNb -> Memory                                
-initMemory a = Memory [[]] [antInitialPositions !! a] 
+initMemory :: (Int, Int) -> AntNb -> Memory                                
+initMemory (x, y) a = Memory [[]] [antInitialPositions !! a] x y
               
 -- | store grid information into memory              
 updateMemory :: Memory -> AntNb -> Grid -> Memory              
-updateMemory m a g = Memory foods'' tracks' 
+updateMemory m a g = Memory foods'' tracks' (memoryFood m) (memoryTrack m)
   where 
     foods' = map (\ xs -> xs \\ fovFilter) (foods m) -- we update the previous states according to the current fov 
-    foods'' = take memoryFood (food g):foods' -- time to forget about some previous states
-    tracks' = take memoryTrack $ antPosition g a : tracks m
+    foods'' = take (memoryFood m) (food g):foods' -- time to forget about some previous states
+    tracks' = take (memoryTrack m) $ antPosition g a : tracks m
     fovFilter = fovList $ antPosition g a
     
 -- | return a list of cases corresponding to a fov

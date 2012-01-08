@@ -30,9 +30,9 @@ instance Show Game where
   show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
 
 -- | Initialise a game
-initGame :: Grid -> [AntNb -> Memory -> Grid -> Direction] -> Game
+initGame :: Grid -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> Game
 initGame gr mvs = Game gr gr a
-  where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0, 1]
+  where a = map (\ ((p, mv), i) -> initAnt i p (mv i)) $ zip mvs [0, 1]
 
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
@@ -61,7 +61,7 @@ gameWinner :: Game -> AntNb
 gameWinner g = antNb (head $ sortBy (\ a a' -> compare (Ant.score a') (Ant.score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
 
 -- | run a set of games
-runMatch :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> [Game]
+runMatch :: [Grid] -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [Game]
 runMatch gs moves = games' -- Works only for two ants
   where
     grids = take nbMatch gs
@@ -76,7 +76,7 @@ matchPercentage m = score 0 / (fromIntegral nbMatch)
     score ant = foldl (\ sum (nb, b) -> if (if b then (==) else (/=) ) nb ant then sum + 1 else sum) 0 (zip winners (cycle [True, False]))
     
 -- | tournament between mutiple ants
-tournament :: [Grid] -> ([AntNb -> Memory -> Grid -> Direction] -> [[AntNb -> Memory -> Grid -> Direction]]) -> [AntNb -> Memory -> Grid -> Direction] -> [[Game]]
+tournament :: [Grid] -> ([((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [[((Int, Int), AntNb -> Memory -> Grid -> Direction)]]) -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [[Game]]
 tournament gs selection moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (selection moves)
 
 -- | save a game to the filesystem
