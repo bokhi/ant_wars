@@ -10,12 +10,15 @@ module Ant (Ant(..)
            , hider
            , wise
            , precautionary
+           , ruleBasedAnts
            ) where
 
 import Data.List
 import System.IO.Unsafe
 import Grid
 import Memory
+
+ruleBasedAnts = [testMove, gready, predator, hider, wise, precautionary]
 
 data Ant = Ant {antNb :: AntNb
                , directions :: [Direction]

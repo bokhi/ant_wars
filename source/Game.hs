@@ -32,7 +32,7 @@ instance Show Game where
 -- | Initialise a game
 initGame :: Grid -> [AntNb -> Memory -> Grid -> Direction] -> Game
 initGame gr mvs = Game gr gr a
-  where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0..]
+  where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0, 1]
 
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game
@@ -65,7 +65,7 @@ runMatch :: [Grid] -> [AntNb -> Memory -> Grid -> Direction] -> [Game]
 runMatch gs moves = games' -- Works only for two ants
   where
     grids = take nbMatch gs
-    games = map (\ grid -> initGame grid moves) grids 
+    games = map (\ (grid, b) -> initGame grid (if b then moves else reverse moves)) (zip grids (cycle [True, False])) -- to alternate the ants initial positions in order to give a 50% equity
     games' = map runGame games
 
 -- | Percentage of victory    
@@ -73,7 +73,7 @@ matchPercentage :: [Game] -> Float
 matchPercentage m = score 0 / (fromIntegral nbMatch)
   where 
     winners = map gameWinner m
-    score ant = foldl (\ sum nb -> if nb == ant then sum + 1 else sum) 0 winners
+    score ant = foldl (\ sum (nb, b) -> if (if b then (==) else (/=) ) nb ant then sum + 1 else sum) 0 (zip winners (cycle [True, False]))
     
 -- | tournament between mutiple ants
 tournament :: [Grid] -> ([AntNb -> Memory -> Grid -> Direction] -> [[AntNb -> Memory -> Grid -> Direction]]) -> [AntNb -> Memory -> Grid -> Direction] -> [[Game]]

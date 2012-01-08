@@ -1,0 +1,21 @@
+* Equity
+  games are biased in favor of ant0
+
+  | testMove | gready | predator | hider |  wise | precautionary |
+  |----------+--------+----------+-------+-------+---------------|
+  |    0.644 |  0.555 |    0.534 | 0.577 | 0.526 |         0.531 |
+
+  run for nbMatch = 1000, ant0 and ant1 being the same function
+
+  In order to obtain a 50% equity, ants play succesively as ant0 and ant1
+
+  | testMove | gready | predator | hider |  wise | precautionary |
+  |----------+--------+----------+-------+-------+---------------|
+  |     0.51 |  0.533 |    0.467 | 0.489 | 0.493 |         0.487 |
+
+
+
+
+  
+
+  
