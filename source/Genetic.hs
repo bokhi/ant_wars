@@ -1,42 +1,41 @@
-{-# OPTIONS_GHC -XDeriveDataTypeable #-} 
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE  MultiParamTypeClasses #-}
 -- | This module is aimed at generate genetically programmed ants
 module Genetic()
        where
 
-import GenProg
-import Data.Generics
-import Control.Monad
-import Control.Monad.Random
+import Data.List
+import Grid
 
-data E = Plus E E
-       | Minus E E
-       | Times E E
-       | Const Int
-       deriving (Typeable,Data,Eq,Show)
-                                                    
-eval :: E ->  Int                
-eval (Const c)     =  c
-eval (Plus e1 e2)  =  (+) (eval e1) (eval e2)
-eval (Minus e1 e2) =  (-) (eval e1) (eval e2)
-eval (Times e1 e2) =  (*) (eval e1) (eval e2)
-                         
-instance GenProg (Rand StdGen) E where                         
-  terminal    =  liftM Const $  getRandomR (1,9)
-  nonterminal = do
-    r <- getRandomR (0,2)
-    [ liftM2 Plus terminal terminal,
-      liftM2 Minus terminal terminal,
-      liftM2 Times terminal terminal] !! r
-      
-myFitness :: Int -> E -> Double      -- modif
-myFitness n e = error + size
-  where error = realToFrac  (abs  (n - (eval e)))
-        size  = (realToFrac $ nodes e) / 100
-                        
+data A = Rect (Int, Int, Int, Int)
 
-params = defaultEvolParams { fitness = myFitness 12345 }
-g = mkStdGen 0
-i = cachedBest $ evalRand (evolve params) g
+data B = And B B
+       | Or B B
+       | Not B
+       | IsFood A
+       | IsEnemy A
+       | IsSmaller F F
+
+data F = Const Float
+       | Add F F
+       | Sub F F
+       | Mul F F
+       | If B F F
+         
+evalB :: B -> Grid -> Bool
+evalB (And b1 b2) g = evalB b1 g && evalB b2 g
+evalB (Or b1 b2) g = evalB b1 g || evalB b2 g
+evalB (Not b) g = not $ evalB b g
+evalB (IsFood a) g = not $ null $ food g `intersect` rect2List a
+evalB (IsEnemy a) g = if length (antPositions g) == 1 
+                      then False
+                      else not $ null $ antPositions g `intersect` rect2List a -- Buggy cannot differentitate other ant and itself
+evalB (IsSmaller f1 f2) g = evalF f1 g < evalF f2 g
+
+evalF :: F -> Grid -> Float
+evalF (Const f) _ = f
+evalF (Add f1 f2) g = evalF f1 g + evalF f2 g
+evalF (Sub f1 f2) g = evalF f1 g - evalF f2 g
+evalF (Mul f1 f2) g = evalF f1 g * evalF f2 g
+evalF (If b f1 f2) g = if evalB b g then evalF f1 g else evalF f2 g
+
+rect2List :: A -> [(Int, Int)]
+rect2List (Rect (x, y, dx, dy)) = [(x' `mod` dimension , y' `mod` dimension) | x' <- [x..(x+dx)], y' <- [y..(y+dy)]]
