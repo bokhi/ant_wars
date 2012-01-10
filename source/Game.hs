@@ -1,4 +1,4 @@
--- | This module contains functions to run matches between different implementations of ant behaviours
+-- | This module contains functions to run matches between different ants
 module Game (Game(..)
             , initGame
             , runGame
@@ -17,20 +17,23 @@ import Grid
 import Ant
 import Memory
 
-nbMove = 35
-nbMatch = 10
-antNumber = 2
+nbMove = 35 -- number of mooves by player by game
+nbMatch = 10 -- number of games in a match
+antNumber = 2 -- number of ant playing a game
 
-data Game = Game {initialGrid :: Grid
-                 , grid :: Grid
-                 , ants :: [Ant]
+data Game = Game {initialGrid :: Grid -- to keep trace of the initial grid 
+                 , grid :: Grid -- the current state of the game
+                 , ants :: [Ant] -- the ants that are playing the game
                  } 
                             
+-- | Represent the function caracterising the ant algorithm            
+type AntMove = ((Int, Int), AntNb -> Memory -> Grid -> Direction)
+
 instance Show Game where
   show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
 
 -- | Initialise a game
-initGame :: Grid -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> Game
+initGame :: Grid -> [AntMove] -> Game
 initGame gr mvs = Game gr gr a
   where a = map (\ ((p, mv), i) -> initAnt i p (mv i)) $ zip mvs [0, 1]
 
@@ -51,34 +54,35 @@ endGame g = any (\ a -> length (directions a) >= nbMove) (ants g)
             
 -- | run a game between two ants     
 runGame :: Game -> Game
-runGame g = runGame' g 0
+runGame g = runGame' g 0 -- the ant0 starts playing
   where
     runGame' g i = if endGame g 
                    then g
                    else runGame' (updateGame g i) (succ i `mod` antNumber)
+                        
 -- | Winner of a game
 gameWinner :: Game -> AntNb    
-gameWinner g = if score0 >= score1 then 0 else 1
+gameWinner g = if score0 >= score1 then 0 else 1 -- ant0 wins in case of tie
   where
     [score0, score1] = Grid.score $ grid g
 
 -- | run a set of games
-runMatch :: [Grid] -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [Game]
+runMatch :: [Grid] -> [AntMove] -> [Game]
 runMatch gs moves = games' -- Works only for two ants
   where
     grids = take nbMatch gs
     games = map (\ (grid, b) -> initGame grid (if b then moves else reverse moves)) (zip grids (cycle [True, False])) -- to alternate the ants initial positions in order to give a 50% equity
     games' = map runGame games
 
--- | Percentage of victory    
+-- | Percentage of victory for ant0 against ant1 
 matchPercentage :: [Game] -> Float
 matchPercentage m = score 0 / (fromIntegral nbMatch)
   where 
     winners = map gameWinner m
-    score ant = foldl (\ sum (nb, b) -> if (if b then (==) else (/=) ) nb ant then sum + 1 else sum) 0 (zip winners (cycle [True, False]))
+    score ant = sum $ map (\ (nb, b) -> if (if b then (==) else (/=) ) nb ant then 1 else 0)  (zip winners (cycle [True, False])) -- due to the games' ant position alterning
     
 -- | tournament between mutiple ants
-tournament :: [Grid] -> ([((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [[((Int, Int), AntNb -> Memory -> Grid -> Direction)]]) -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [[Game]]
+tournament :: [Grid] -> ([AntMove] -> [[AntMove]]) -> [AntMove] -> [[Game]]
 tournament gs selection moves = map (\ (gs, ms) -> runMatch gs ms) $ zip (group' nbMatch gs) (selection moves)
 
 -- | save a game to the filesystem
@@ -87,10 +91,10 @@ saveGame file g = do
   appendFile file $ show g
 
 matchStat :: [Game] -> String
-matchStat m = stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
+matchStat m = stat 0 ++ " " ++ stat 1 ++ "\n" 
   where
     totalScore a = sum $ map (\ g -> score (grid g) !! a) m
-    totalKill a =  foldl (\ sum as -> sum + if kill (as !! a) then 1 else 0) 0 (map (\ g -> ants g) m)
+    totalKill a = sum $ map (\ g -> if kill (ants g !! a) then 1 else 0) m
     totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
     stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
     
