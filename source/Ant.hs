@@ -30,7 +30,7 @@ ruleBasedAnts' = [gready', predator', hider', wise', precautionary']
 
 data Ant = Ant {antNb :: AntNb
                , directions :: [Direction]
-               , score :: Int
+               , score :: Int -- to be removed
                , kill :: Bool
                , move :: Memory -> Grid -> Direction
                , memory :: Memory}

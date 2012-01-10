@@ -13,7 +13,7 @@ module Helper (replaceNth
               ) where
 
 import Data.List
-       
+
 -- | replace the n-nth element of a list
 replaceNth :: Int -> a -> [a] -> [a]
 replaceNth n newVal [] = [newVal] -- if the index is too big, we add the element at the rear

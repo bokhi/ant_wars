@@ -10,7 +10,7 @@ module Grid (Grid(..)
             , antPosition
             , updateGrid
             , rotateGrid
-            , foodLeft
+            , foodLeft -- to be removed
             , fovGrid
             , distance
             , updatePos
@@ -25,12 +25,13 @@ dimension = 11 -- dimension of a grid
 nbFood = 15 -- initial number of pieces of food on a grid
 fov = 5 -- size of the field of view square 
 antInitialPositions = [(5,  2), (5, 8)] -- initial position of the ants on the grid
+antInitialScore = [0, 0] -- ants' initial score
 
 -- | The food and ants are represented as lists of points on the grid
 -- eaten food and killed ants are removed from the lists
-data Grid = Grid { food :: [(Int, Int)]
-                 , antPositions :: [(Int, Int)]
-                 , score :: [Int]
+data Grid = Grid { food :: [(Int, Int)] 
+                 , antPositions :: [(Int, Int)] -- when the fov is applied, it may contain only one element : the playing ant position - if more ants then antn is n-nth element of the list
+                 , score :: [Int] -- ant-n score is the n-nth element of the list
                  } 
                             
 -- | to express the motion an ant is able to do
@@ -47,14 +48,15 @@ generateGrids gen = generateGrids' (randomRs (0, (pred dimension)) gen :: [Int])
         if length l == nbFood
         then (l, random)
         else 
-          let (x:x':xs) = random in 
-          if (x, x') `elem` l || (x, x') `elem` antInitialPositions 
+          let (x:x':xs) = random in  
+          if (x, x') `elem` l || (x, x') `elem` antInitialPositions -- to test if the food created is already on the ant initial positions, or covers another piece of food
           then generateFood xs l
           else generateFood xs ((x, x'):l)
-    generateGrids' random = (Grid food antInitialPositions [0, 0]):generateGrids' random'
+    generateGrids' random = (Grid food antInitialPositions antInitialScore):generateGrids' random'
         where (food, random') = generateFood random []
 
 -- | The grid can be represented as a ASCII table, F for pieces of food, 0 and 1 for ant0 and ant1 respectively     
+-- the ant playing is always represented by a 0 and the opponent by a 1              
 instance Show Grid where
   show g =   
     let coord (x, y) = (succ dimension)*2*(2*x + 1) + 2*y + 1 -- translate a point to its position in the ascii table
@@ -67,24 +69,9 @@ instance Show Grid where
 
 -- | return the position of an ant
 antPosition :: Grid -> AntNb -> (Int, Int)  
-antPosition g a = antPositions g !! (a `mod` length (antPositions g))
+antPosition g a = antPositions g !! (a `mod` length (antPositions g)) 
 
--- | This function generates a new grid following the move of a specific ant
-updateGrid :: Grid -> AntNb -> Direction -> Grid
-updateGrid g a m  = 
-  if length (antPositions g) > 1 -- two player
-  then 
-    if collision 
-    then Grid (food g) [pos'] (score g) -- only one ant left
-    else Grid food' (replaceNth a pos' (antPositions g)) score'
-  else Grid food' [pos'] score'
-    where
-      score' = replaceNth a (score g !! a + ((length (food g)) - (length food'))) (score g)
-      updateFood f p m = delete (updatePos p m) f
-      pos' = updatePos (antPosition g a) m
-      food' = delete pos' $ food g
-      collision = length (antPositions g) > 1 && pos' == antPosition g (succ a)
-      
+-- | compute the new position on the grid given a direction
 updatePos :: (Int, Int) -> Direction -> (Int, Int)
 updatePos (x, y) m = 
         case m of 
@@ -97,10 +84,20 @@ updatePos (x, y) m =
           SW -> (mod (x + 1) dimension, mod (y - 1) dimension)
           W -> (x, mod (y - 1) dimension)
 
--- | 90' clockwise rotation of the grid
-rotateGrid :: Grid -> Grid
-rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g)) (score g)
-  where rotate (x, y) = (y, mod (-x - 1) dimension)      
+-- | This function generates a new grid following the move of a specific ant
+updateGrid :: Grid -> AntNb -> Direction -> Grid
+updateGrid g a m  = 
+  if length (antPositions g) > 1 -- two player
+  then 
+    if collision 
+    then Grid (food g) [pos'] (score g) -- only one ant left
+    else Grid food' (replaceNth a pos' (antPositions g)) score'
+  else Grid food' [pos'] score'
+    where
+      pos' = updatePos (antPosition g a) m
+      collision = length (antPositions g) > 1 && pos' == antPosition g (succ a)
+      score' = replaceNth a (score g !! a + ((length (food g)) - (length food'))) (score g)
+      food' = delete pos' $ food g
         
 -- | Number of pieces of food on a grid        
 foodLeft g = length $ food g
@@ -119,3 +116,8 @@ distance (x, y) (x', y') =  max (min x'' $ dimension - x'') (min y'' $ dimension
   where
     x'' = abs $ x - x'
     y'' = abs $ y - y' 
+    
+-- | 90' clockwise rotation of the grid
+rotateGrid :: Grid -> Grid
+rotateGrid g = Grid (map rotate (food g)) (map rotate (antPositions g)) (score g)
+  where rotate (x, y) = (y, mod (-x - 1) dimension)      
