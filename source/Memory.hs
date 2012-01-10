@@ -10,24 +10,24 @@ import Data.List
 import Helper
 import Grid
 
+memoryFood = 15 -- number of fovs a ant can remember related to food
+memoryTrack = 15 -- number of previous moves an ant can remember
 
 data Memory = Memory { foods :: [[(Int, Int)]]
                      , tracks :: [(Int, Int)]
-                     , memoryFood :: Int -- number of fovs a ant can remember related to food
-                     , memoryTrack :: Int  -- number of previous moves an ant can remember
                      } deriving Show
                                 
 -- | initialise the memory of an ant                                
-initMemory :: (Int, Int) -> AntNb -> Memory                                
-initMemory (x, y) a = Memory [[]] [antInitialPositions !! a] x y
+initMemory :: AntNb -> Memory                                
+initMemory a = Memory [[]] [antInitialPositions !! a] 
               
 -- | store grid information into memory              
 updateMemory :: Memory -> AntNb -> Grid -> Memory              
-updateMemory m a g = Memory foods'' tracks' (memoryFood m) (memoryTrack m)
+updateMemory m a g = Memory foods'' tracks' 
   where 
     foods' = map (\ xs -> xs \\ fovFilter) (foods m) -- we update the previous states according to the current fov 
-    foods'' = take (memoryFood m) (food g):foods' -- time to forget about some previous states
-    tracks' = take (memoryTrack m) $ antPosition g a : tracks m
+    foods'' = take memoryFood (food g):foods' -- time to forget about some previous states
+    tracks' = take memoryTrack $ antPosition g a : tracks m
     fovFilter = fovList $ antPosition g a
     
 -- | return a list of cases corresponding to a fov
@@ -35,7 +35,7 @@ fovList :: (Int, Int) -> [(Int, Int)]
 fovList (x, y) = cartProd xs ys
   where
     fov' = fov `div` 2
-    tor = map (\ x -> x `mod` dimension)
+    tor = map (\ x -> x `mod` dimension) -- remap the positions to the correct interval
     xs = tor [(x - fov')..(x + fov')]
     ys = tor [(y - fov')..(y + fov')]
     

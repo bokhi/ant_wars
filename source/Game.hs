@@ -18,7 +18,7 @@ import Ant
 import Memory
 
 nbMove = 35 -- number of mooves by player by game
-nbMatch = 10 -- number of games in a match
+nbMatch = 100 -- number of games in a match
 antNumber = 2 -- number of ant playing a game
 
 data Game = Game {initialGrid :: Grid -- to keep trace of the initial grid 
@@ -27,7 +27,7 @@ data Game = Game {initialGrid :: Grid -- to keep trace of the initial grid
                  } 
                             
 -- | Represent the function caracterising the ant algorithm            
-type AntMove = ((Int, Int), AntNb -> Memory -> Grid -> Direction)
+type AntMove = AntNb -> Memory -> Grid -> Direction
 
 instance Show Game where
   show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
@@ -35,7 +35,7 @@ instance Show Game where
 -- | Initialise a game
 initGame :: Grid -> [AntMove] -> Game
 initGame gr mvs = Game gr gr a
-  where a = map (\ ((p, mv), i) -> initAnt i p (mv i)) $ zip mvs [0, 1]
+  where a = map (\ (mv, i) -> initAnt i (mv i)) $ zip mvs [0, 1]
 
 -- | Given a game and a specific ant, update the grid by moving the ant
 updateGame :: Game -> AntNb -> Game

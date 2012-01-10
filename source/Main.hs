@@ -8,4 +8,4 @@ import Helper
 main = do
   gen <- getStdGen
   let grids = generateGrids gen
-  mapM (\ x -> putStrLn (show (matchPercentage x))) (tournament grids selection2 (zip (repeat (15, 0)) ruleBasedAnts'))
+  mapM (\ x -> putStrLn (show (matchPercentage x))) (tournament grids selection2 ruleBasedAnts')

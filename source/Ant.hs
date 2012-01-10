@@ -40,8 +40,8 @@ instance Show Ant where
 
 
 -- | Initiate an ant given a move function and an id
-initAnt :: AntNb -> (Int, Int) ->  (Memory -> Grid -> Direction) -> Ant
-initAnt a p m = Ant a [] False m (initMemory p a)
+initAnt :: AntNb ->  (Memory -> Grid -> Direction) -> Ant
+initAnt a m = Ant a [] False m (initMemory a)
 
 -- | Move an ant on a grid to update the ant and grid structure
 updateAnt :: Ant -> Grid -> (Ant, Grid)
