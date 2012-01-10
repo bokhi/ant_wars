@@ -14,6 +14,7 @@ module Ant (Ant(..)
            , wise'
            , precautionary
            , precautionary'
+           , geneticAnt
            , ruleBasedAnts
            , ruleBasedAnts'
            ) where
@@ -22,6 +23,7 @@ import Data.List
 import System.IO.Unsafe
 import Grid
 import Memory
+import Genetic
 
 ruleBasedAnts = [testMove, gready, predator, hider, wise, precautionary]
 ruleBasedAnts' = [gready', predator', hider', wise', precautionary']
@@ -132,3 +134,15 @@ precautionary a m g =
     where g' = fovGrid g a
           
 precautionary' a m g = precautionary a m (memoryGrid (updateMemory m a g) g)
+
+geneticAnt :: (I, I) -> AntNb -> Memory -> Grid -> Direction 
+geneticAnt (t, t') _ _ g = d
+  where
+    g' = rotateGrid g
+    g'' = rotateGrid g'
+    g''' = rotateGrid g''
+    gs = [g, g', g'', g''']
+    ds = [N, W, S, E, NE, NW, SW, SE]
+    es = map (evalI t) gs
+    es' = map (evalI t') gs
+    (_, d) = maximumBy (\ x x' -> compare (fst x) (fst x')) (zip (es ++ es') ds)

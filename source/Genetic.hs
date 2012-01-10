@@ -1,6 +1,14 @@
 -- | This module is aimed at generate genetically programmed ants
-module Genetic()
-       where
+module Genetic (A(..)
+                , B(..)
+                , I(..)
+                , evalB
+                , evalI
+                , generateA
+                , generateB
+                , generateI
+                ) where
+
 
 import System.Random
 import Data.List
