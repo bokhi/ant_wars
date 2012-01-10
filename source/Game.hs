@@ -18,7 +18,7 @@ import Ant
 import Memory
 
 nbMove = 35
-nbMatch = 1000
+nbMatch = 5
 antNumber = 2
 
 data Game = Game {initialGrid :: Grid

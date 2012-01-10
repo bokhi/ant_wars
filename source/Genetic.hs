@@ -7,12 +7,14 @@ module Genetic (A(..)
                 , generateA
                 , generateB
                 , generateI
+                , genAnt
                 ) where
 
 
 import System.Random
 import Data.List
 import Grid
+import Data.Typeable
 
 
 dxA = 4 -- maximum dx size of a Rect
@@ -20,7 +22,7 @@ dyA = 4 -- maximum dy size of a Rect
 
 -- | Represent a rectangular arear on the grid
 -- Rect (x, y, dx, dy) is a rectangle starting at position (x, y) on the grid and of length dx and dy
-data A = Rect (Int, Int, Int, Int) deriving Show
+data A = Rect (Int, Int, Int, Int) deriving (Show, Read)
 
 -- | Represent boolean function
 data B = And B B
@@ -28,15 +30,35 @@ data B = And B B
        | Not B
        | IsFood A
        | IsEnemy A
-       | IsSmaller I I deriving Show
+       | IsSmaller I I deriving (Show, Read)
 
 -- | Represent integer function
 data I = Const Int
        | Add I I
        | Sub I I
        | Mul I I
-       | If B I I deriving Show
+       | If B I I deriving (Show, Read)
                            
+nbNodeA :: A -> Int                           
+nbNodeA _ = 1
+
+nbNodeB :: B -> Int
+nbNodeB (And b1 b2) = 1 + nbNodeB b1 + nbNodeB b2
+nbNodeB (Or b1 b2) = 1 + nbNodeB b1 + nbNodeB b2
+nbNodeB (Not b) = 1 + nbNodeB b        
+nbNodeB (IsFood a) = 1 + nbNodeA a
+nbNodeB (IsEnemy a) = 1 + nbNodeA a
+nbNodeB (IsSmaller i1 i2) = 1 + nbNodeI i1 + nbNodeI i2
+
+-- | number of node in a I tree                           
+nbNodeI :: I -> Int
+nbNodeI (Const i) = 1
+nbNodeI (Add i1 i2) = 1 + nbNodeI i1 + nbNodeI i2
+nbNodeI (Sub i1 i2) = 1 + nbNodeI i1 + nbNodeI i2
+nbNodeI (Mul i1 i2) = 1 + nbNodeI i1 + nbNodeI i2
+nbNodeI (If b i1 i2) = 1 + nbNodeB b + nbNodeI i1 + nbNodeI i2
+
+
 -- | evaluate a B expression                           
 evalB :: B -> Grid -> Bool
 evalB (And b1 b2) g = evalB b1 g && evalB b2 g
@@ -93,10 +115,24 @@ generateI (x:xs) h =
       where xs' = drop (x * 10) xs
             xs'' = drop (x * 100) xs'
 
+genAnt :: (I, I) -> Grid -> Direction 
+genAnt (t, t') g = d
+  where
+    g' = rotateGrid g
+    g'' = rotateGrid g'
+    g''' = rotateGrid g''
+    gs = [g, g', g'', g''']
+    ds = [N, W, S, E, NE, NW, SW, SE]
+    es = map (evalI t) gs
+    es' = map (evalI t') gs
+    (_, d) = maximumBy (\ x x' -> compare (fst x) (fst x')) (zip (es ++ es') ds)
+
 gen = mkStdGen 12348
+gen' = mkStdGen 712349
 grids = generateGrids gen
-xs = randomRs (0, 10) (mkStdGen 0) :: [Int]
+xs = randomRs (0, 10) (gen) :: [Int]
+xs' = randomRs (0, 10) (gen') :: [Int]
+t = generateI xs 4
+t' = generateI xs' 4
 
-test = evalI (generateI xs 4) (head grids)
-test' = evalI (generateI xs 4) (rotateGrid $ head grids)
-
+d = genAnt (t, t') $ head grids

@@ -73,6 +73,7 @@ gready' a m g = gready a m (memoryGrid (updateMemory m a g) g)
 user :: AntNb -> Memory -> Grid -> Direction
 user a m g = unsafePerformIO $ do
   print g'
+  putStrLn $ "Choose between : " ++ show [N, W, S, E, NE, NW, SW, SE]
   d <- getLine
   return (read d :: Direction)
   where
@@ -136,13 +137,4 @@ precautionary a m g =
 precautionary' a m g = precautionary a m (memoryGrid (updateMemory m a g) g)
 
 geneticAnt :: (I, I) -> AntNb -> Memory -> Grid -> Direction 
-geneticAnt (t, t') _ _ g = d
-  where
-    g' = rotateGrid g
-    g'' = rotateGrid g'
-    g''' = rotateGrid g''
-    gs = [g, g', g'', g''']
-    ds = [N, W, S, E, NE, NW, SW, SE]
-    es = map (evalI t) gs
-    es' = map (evalI t') gs
-    (_, d) = maximumBy (\ x x' -> compare (fst x) (fst x')) (zip (es ++ es') ds)
+geneticAnt (t, t') _ _ g = genAnt (t, t') g
