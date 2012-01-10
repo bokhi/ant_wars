@@ -10,7 +10,6 @@ module Grid (Grid(..)
             , antPosition
             , updateGrid
             , rotateGrid
-            , foodLeft -- to be removed
             , fovGrid
             , distance
             , updatePos
@@ -99,9 +98,6 @@ updateGrid g a m  =
       score' = replaceNth a (score g !! a + ((length (food g)) - (length food'))) (score g)
       food' = delete pos' $ food g
         
--- | Number of pieces of food on a grid        
-foodLeft g = length $ food g
-
 -- | Return the grid an ant perceives according to the fov
 fovGrid :: Grid -> AntNb -> Grid
 fovGrid g a = Grid (filter f $ food g) (filter f $ antPositions g) (score g)

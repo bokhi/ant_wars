@@ -18,7 +18,7 @@ import Ant
 import Memory
 
 nbMove = 35
-nbMatch = 1000
+nbMatch = 10
 antNumber = 2
 
 data Game = Game {initialGrid :: Grid
@@ -58,7 +58,9 @@ runGame g = runGame' g 0
                    else runGame' (updateGame g i) (succ i `mod` antNumber)
 -- | Winner of a game
 gameWinner :: Game -> AntNb    
-gameWinner g = antNb (head $ sortBy (\ a a' -> compare (Ant.score a') (Ant.score a)) (ants g)) -- TODO verify that 1 is winning in case of tie --> seems to be OK
+gameWinner g = if score0 >= score1 then 0 else 1
+  where
+    [score0, score1] = Grid.score $ grid g
 
 -- | run a set of games
 runMatch :: [Grid] -> [((Int, Int), AntNb -> Memory -> Grid -> Direction)] -> [Game]
@@ -87,7 +89,7 @@ saveGame file g = do
 matchStat :: [Game] -> String
 matchStat m = stat 0 ++ " " ++ stat 1 ++ "\n" -- Currently only support two ants.
   where
-    totalScore a = foldl (\ sum as -> sum + Ant.score (as !! a)) 0 (map (\ g -> ants g) m)
+    totalScore a = sum $ map (\ g -> score (grid g) !! a) m
     totalKill a =  foldl (\ sum as -> sum + if kill (as !! a) then 1 else 0) 0 (map (\ g -> ants g) m)
     totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
     stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
