@@ -174,6 +174,31 @@ generateI gen d
       (g, gen') = split gen
       (g', g'') = split gen'
 
+-- | data of type I or B
+data IB = B' B | I' I deriving Show
+
+-- | return the pos-nth node from a B expression
+selectB :: Int -> B -> Int -> IB
+selectB pos b n 
+  | pos == n = B' b
+  | otherwise = case b of
+    And b1 b2 -> if pos < succ n + nodeB b1 then selectB pos b1 (succ n) else selectB pos b2 (succ n + nodeB b1)
+    Or b1 b2 -> if pos < succ n + nodeB b1 then selectB pos b1 (succ n) else selectB pos b2 (succ n + nodeB b1)
+    Not b' -> selectB pos b' $ succ n
+    IsSmaller i1 i2 -> if pos < succ n + nodeI i1 then selectI pos i1 (succ n) else selectI pos i2 (succ n + nodeI i1)
+    
+-- | return the pos-nth node from a I expression
+selectI :: Int -> I -> Int -> IB
+selectI pos i n
+  | pos == n = I' i
+  | otherwise = case i of
+    Add i1 i2 -> if pos < succ n + nodeI i1 then selectI pos i1 (succ n) else selectI pos i2 (succ n + nodeI i1)
+    Sub i1 i2 -> if pos < succ n + nodeI i1 then selectI pos i1 (succ n) else selectI pos i2 (succ n + nodeI i1)
+    If b i1 i2 -> if pos < succ n + nodeB b 
+                  then selectB pos b (succ n) 
+                  else if pos < succ n + nodeB b + nodeI i1 
+                       then selectI pos i1 (succ n + nodeB b)
+                       else selectI pos i2 (succ n + nodeB b + nodeI i1)
 
 gen = mkStdGen 0
 (g, g') = split gen
