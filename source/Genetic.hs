@@ -199,12 +199,35 @@ selectI pos i n
                   else if pos < succ n + nodeB b + nodeI i1 
                        then selectI pos i1 (succ n + nodeB b)
                        else selectI pos i2 (succ n + nodeB b + nodeI i1)
-
+                            
+-- | crossing-over between i1 and i2
+cross :: StdGen -> I -> I -> (I, I)                            
+cross gen i1 i2 = (i1', i2')
+  where
+    (g, g') = split gen
+    pos1 = fst (randomR (1, nodeI i1) g) :: Int
+    pos2 = fst (randomR (1, nodeI i2) g') :: Int
+    i1' = case selectI pos2 i2 1 of
+      B' b -> replaceIB pos1 i1 b 1
+      I' i -> replaceII pos1 i1 i 1
+    i2' = case selectI pos1 i1 1 of
+      B' b -> replaceIB pos2 i2 b 1
+      I' i -> replaceII pos2 i2 i 1
+      
+-- | mutate a I expression      
+mutate :: StdGen -> I -> I      
+mutate gen i = case selectI pos i 1 of
+  B' b -> replaceIB pos i (generateB g' 7) 1
+  I' i' -> replaceII pos i (generateI g' 7 ) 1
+  where
+    (g, g') = split gen
+    pos = fst (randomR (1, nodeI i) g) :: Int
+    
 gen = mkStdGen 0
 (g, g') = split gen
 grids = generateGrids g'
 
-i = generateI g 3
-
+i = generateI g 8
+i' = generateI g' 8
 
 
