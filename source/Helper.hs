@@ -19,7 +19,7 @@ module Helper (replaceNth
 import Data.List
 import System.Random
 
--- | give the result of list condisered as a round-robin tournament
+-- | give the result of the match (x, y) of list condisered as a round-robin tournament 
 robin :: Int -> Int -> [a] -> [b] -> b
 robin x y l l' = l' !! ((pred x) * (length l) - ((x * (pred x)) `div` 2) + y - x - 1)
 
