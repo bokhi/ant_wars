@@ -2,6 +2,8 @@
 -- These functions are processing lists, and mostly used to generate
 -- different tournaments given a list of competitors
 module Helper (replaceNth
+              , robin
+              , robinWinner
               , splits
               , removeNth
               , couple
@@ -16,6 +18,15 @@ module Helper (replaceNth
 
 import Data.List
 import System.Random
+
+-- | give the result of list condisered as a round-robin tournament
+robin :: Int -> Int -> [a] -> [b] -> b
+robin x y l l' = l' !! ((pred x) * (length l) - ((x * (pred x)) `div` 2) + y - x - 1)
+
+-- | winner of a round-robin tournament
+robinWinner l l' =  l !! (maximumBy (\ x y -> compare (score x) (score y)) [1..(length l)] - 1)
+  where
+    score x = sum (map (\ y -> if x < y then robin x y l l' else 1 - robin y x l l') [x' | x' <- [1..(length l)], x /= x'])
 
 -- | construct mutiple generators from a single seed
 splits :: Int -> StdGen -> [StdGen]

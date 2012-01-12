@@ -1,5 +1,9 @@
 -- | this module is aimed at generate genetically programmed ants
 module Genetic (I(..)
+                , GenAnt
+                , geneticAnt
+                , antGeneticAlgorithm
+                , saveGenAnt
                 ) where
 
 
@@ -11,10 +15,12 @@ import Grid
 import Memory
 import Game
 
-crossRate = 1.0
-mutateRate = 1.0
+crossRate = 0.8
+mutateRate = 0.1
 popSize = 10
 tournamentSize = 5
+nbGeneration = 4
+popDepth = 5
 
 -- | (x, y, dx, dy) is a rectangle starting at position (x, y) on the grid and of length dx and dy
 type Rect = (Int, Int, Int, Int)
@@ -290,11 +296,11 @@ newIndividual gen pop = [i1'', i2'']
     mut'= fst (random $ g !! 2) :: Float
     i1 = selected (g !! 3) (selectIndividual (g !! 4) tournamentSize pop)
     i2 = selected (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
---    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
-    (i1', i2') = (i1, i2)
+    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
     i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
     i2'' = (if mut < mutateRate then mutateAnt (g !! 8) i2' else i2')
     
+-- | create a new population using selection and genetic operators
 newPop :: StdGen -> [GenAnt] -> [GenAnt]   
 newPop gen pop = newPop' gen pop $ length pop
   where
@@ -304,8 +310,32 @@ newPop gen pop = newPop' gen pop $ length pop
         where
           (g , g') = split gen
     
-    
+-- | generate an evolved population of ant programms
+generation :: StdGen -> [GenAnt]
+generation gen = generation' g' pop nbGeneration
+  where
+    (g, g') = split gen
+    pop = generatePop g popSize popDepth
+    generation' gen pop n 
+      | n == 1 = pop
+      | otherwise = generation' g (newPop g' pop) (pred n)
+        where
+          (g, g') = split gen
+          
+-- | select the best individual of a population using a round-robin tournament          
+bestIndividual :: StdGen -> [GenAnt] -> GenAnt          
+bestIndividual gen pop = robinWinner pop scores
+  where
+    grids = generateGrids gen
+    scores = map matchPercentage (tournament grids selection2 (map (\ x -> geneticAnt x) pop))
 
+antGeneticAlgorithm :: StdGen -> GenAnt
+antGeneticAlgorithm gen = bestIndividual g (generation g')                    
+  where
+    (g , g') = split gen
+    
+saveGenAnt :: [Char] -> GenAnt -> IO ()    
+saveGenAnt file i = writeFile file (show i)
 
 -- | The I expression trees are used to evaluate the result of N and NE movement on the grid 
 -- rotation properties of the problem are thus exploited
