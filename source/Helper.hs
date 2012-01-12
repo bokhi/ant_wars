@@ -2,6 +2,7 @@
 -- These functions are processing lists, and mostly used to generate
 -- different tournaments given a list of competitors
 module Helper (replaceNth
+              , splits
               , removeNth
               , couple
               , selection1
@@ -14,6 +15,14 @@ module Helper (replaceNth
               ) where
 
 import Data.List
+import System.Random
+
+-- | construct mutiple generators from a single seed
+splits :: Int -> StdGen -> [StdGen]
+splits 1 gen = [gen]
+splits n gen = g : splits (pred n) g'
+  where 
+    (g, g') = split gen
 
 -- | remove the n-nth element of a list
 removeNth :: Int -> [a] -> (a, [a])

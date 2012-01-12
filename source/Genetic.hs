@@ -11,6 +11,11 @@ import Grid
 import Memory
 import Game
 
+crossRate = 1.0
+mutateRate = 1.0
+popSize = 10
+tournamentSize = 5
+
 -- | (x, y, dx, dy) is a rectangle starting at position (x, y) on the grid and of length dx and dy
 type Rect = (Int, Int, Int, Int)
 
@@ -109,8 +114,8 @@ replaceBB :: Int -> B -> B -> Int -> B
 replaceBB pos b1 b2 n 
   | pos == n = b2
   | otherwise = case b1 of
-    And b1' b2' -> if pos < succ n + nodeB b1 then And (replaceBB pos b1' b2 (succ n)) b2' else And b1' (replaceBB pos b2' b2 (succ n + nodeB b1'))
-    Or b1' b2' -> if pos < succ n + nodeB b1 then Or (replaceBB pos b1' b2 (succ n)) b2' else Or b1' (replaceBB pos b2' b2 (succ n + nodeB b1'))
+    And b1' b2' -> if pos < succ n + nodeB b1' then And (replaceBB pos b1' b2 (succ n)) b2' else And b1' (replaceBB pos b2' b2 (succ n + nodeB b1'))
+    Or b1' b2' -> if pos < succ n + nodeB b1' then Or (replaceBB pos b1' b2 (succ n)) b2' else Or b1' (replaceBB pos b2' b2 (succ n + nodeB b1'))
     Not b -> Not (replaceBB pos b b2 (succ n))
     IsSmaller i1 i2 -> if pos < succ n + nodeI i1 then IsSmaller (replaceIB pos i1 b2 (succ n)) i2 else IsSmaller i1 (replaceIB pos i2 b2 (succ n + nodeI i1))
 
@@ -135,7 +140,7 @@ replaceII pos i1 i2 n
                     then If (replaceBI pos b i2 (succ n)) i1' i2'
                     else if pos < succ n + nodeB b + nodeI i1'
                          then If b (replaceII pos i1' i2 (succ n + nodeB b)) i2'
-                         else If b i1' (replaceII pos i2' i2 (succ n + nodeB b + nodeI i1))
+                         else If b i1' (replaceII pos i2' i2 (succ n + nodeB b + nodeI i1'))
         
 -- | replace b in i at position pos        
 replaceIB :: Int -> I -> B -> Int -> I
@@ -143,9 +148,9 @@ replaceIB pos i b n = case i of
   Add i1 i2 -> if pos < succ n + nodeI i1 then Add (replaceIB pos i1 b (succ n)) i2 else Add i1 (replaceIB pos i2 b (succ n + nodeI i1))
   Sub i1 i2 -> if pos < succ n + nodeI i1 then Sub (replaceIB pos i1 b (succ n)) i2 else Sub i1 (replaceIB pos i2 b (succ n + nodeI i1))
   Mul i1 i2 -> if pos < succ n + nodeI i1 then Mul (replaceIB pos i1 b (succ n)) i2 else Mul i1 (replaceIB pos i2 b (succ n + nodeI i1))
-  If b' i1 i2 -> if pos < succ n + nodeB b 
+  If b' i1 i2 -> if pos < succ n + nodeB b'
                  then If (replaceBB pos b' b (succ n)) i1 i2
-                 else if pos < succ n + nodeB b + nodeI i1 
+                 else if pos < succ n + nodeB b' + nodeI i1 
                       then If b (replaceIB pos i1 b (succ n + nodeB b')) i2
                       else If b i1 (replaceIB pos i2 b (succ n + nodeB b' + nodeI i1))
                            
@@ -206,12 +211,24 @@ cross gen i1 i2 = (i1', i2')
     (g, g') = split gen
     pos1 = fst (randomR (1, nodeI i1) g) :: Int
     pos2 = fst (randomR (1, nodeI i2) g') :: Int
-    i1' = case selectI pos2 i2 1 of
-      B' b -> replaceIB pos1 i1 b 1
-      I' i -> replaceII pos1 i1 i 1
-    i2' = case selectI pos1 i1 1 of
-      B' b -> replaceIB pos2 i2 b 1
-      I' i -> replaceII pos2 i2 i 1
+    i1' = case (selectI pos2 i2 1, selectI pos1 i1 1) of
+      (B' b, B' _) -> replaceIB pos1 i1 b 1
+      (I' i, I' _) -> replaceII pos1 i1 i 1
+      _ -> i1
+    i2' = case (selectI pos1 i1 1, selectI pos2 i2 1) of
+      (B' b, B' _) -> replaceIB pos2 i2 b 1
+      (I' i, I' _) -> replaceII pos2 i2 i 1
+      _ -> i2
+      
+-- | represent two I expressions 
+type GenAnt = (I, I)      
+      
+-- | crossing-over for GenAnt              
+crossAnt :: StdGen -> GenAnt -> GenAnt -> (GenAnt, GenAnt)
+crossAnt gen (i1, i1') (i2, i2') = (cross g i1 i2, cross g' i1' i2')
+  where
+    (g, g') = split gen
+
       
 -- | mutate a I expression      
 mutate :: StdGen -> I -> I      
@@ -222,8 +239,14 @@ mutate gen i = case selectI pos i 1 of
     (g, g') = split gen
     pos = fst (randomR (1, nodeI i) g) :: Int
     
+-- | mutate a GenAnt    
+mutateAnt :: StdGen -> GenAnt -> GenAnt    
+mutateAnt gen (i, i') = (mutate g i, mutate g' i')
+  where
+    (g, g') = split gen
+    
 -- | generate a population and genetic programs
-generatePop :: StdGen -> Int -> Int -> [(I, I)]    
+generatePop :: StdGen -> Int -> Int -> [GenAnt]    
 generatePop _ 0 _ = []
 generatePop gen n d = (i, i') : generatePop g'' (pred n) d
   where
@@ -233,7 +256,7 @@ generatePop gen n d = (i, i') : generatePop g'' (pred n) d
     i' = generateI g' d
     
 -- | select n individuals from a given population    
-selectIndividual :: StdGen -> Int -> [(I, I)] -> [(I, I)]    
+selectIndividual :: StdGen -> Int -> [GenAnt] -> [GenAnt]    
 selectIndividual _ 0 _ = []
 selectIndividual gen n p = i : selectIndividual g' (pred n) p'
   where 
@@ -241,7 +264,7 @@ selectIndividual gen n p = i : selectIndividual g' (pred n) p'
     (i, p') = removeNth (fst (randomR (0, pred $ length p) g) :: Int) p
 
 -- | run a tournament to select an individual
-selection :: StdGen -> [(I, I)] -> [(I, I)]
+selection :: StdGen -> [GenAnt] -> [GenAnt]
 selection gen [] = []
 selection gen [x] = [x]
 selection gen (x:x':xs) = (if winner >= 0.5 then x else x') : selection g' xs
@@ -251,18 +274,42 @@ selection gen (x:x':xs) = (if winner >= 0.5 then x else x') : selection g' xs
     winner = matchPercentage $ runMatch grids [geneticAnt x, geneticAnt x']
     
 -- | best individual of the selection process    
-selected :: StdGen -> [(I, I)] -> (I, I)    
+selected :: StdGen -> [GenAnt] -> GenAnt    
 selected _ [x] = x
 selected gen xs = selected g (selection g' xs)
   where
     (g, g') = split gen
     
-
+-- | create 2 new individuals given a population
+newIndividual :: StdGen -> [GenAnt] -> [GenAnt]
+newIndividual gen pop = [i1'', i2'']
+  where
+    g = splits 10 gen
+    cro = fst (random $ g !! 0) :: Float
+    mut = fst (random $ g !! 1) :: Float
+    mut'= fst (random $ g !! 2) :: Float
+    i1 = selected (g !! 3) (selectIndividual (g !! 4) tournamentSize pop)
+    i2 = selected (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
+--    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    (i1', i2') = (i1, i2)
+    i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
+    i2'' = (if mut < mutateRate then mutateAnt (g !! 8) i2' else i2')
+    
+newPop :: StdGen -> [GenAnt] -> [GenAnt]   
+newPop gen pop = newPop' gen pop $ length pop
+  where
+    newPop' gen pop n 
+      | n <= 1 = []
+      | otherwise = newIndividual g pop ++ newPop' g' pop (n - 2)
+        where
+          (g , g') = split gen
+    
+    
 
 
 -- | The I expression trees are used to evaluate the result of N and NE movement on the grid 
 -- rotation properties of the problem are thus exploited
-geneticAnt :: (I, I) -> AntNb -> Memory -> Grid -> Direction 
+geneticAnt :: GenAnt -> AntNb -> Memory -> Grid -> Direction 
 geneticAnt (t, t') a m g = d
   where
     g' = rotateGrid g
