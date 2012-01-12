@@ -2,6 +2,7 @@
 -- These functions are processing lists, and mostly used to generate
 -- different tournaments given a list of competitors
 module Helper (replaceNth
+              , removeNth
               , couple
               , selection1
               , selection2
@@ -13,6 +14,13 @@ module Helper (replaceNth
               ) where
 
 import Data.List
+
+-- | remove the n-nth element of a list
+removeNth :: Int -> [a] -> (a, [a])
+removeNth pos l = removeNth' pos l [] 0
+removeNth' pos l l' n  
+  | pos == n = (head l, reverse l' ++ tail l)
+  | otherwise = removeNth' pos (tail l) (head l : l') (succ n)
 
 -- | replace the n-nth element of a list
 replaceNth :: Int -> a -> [a] -> [a]
