@@ -17,10 +17,10 @@ import Expression
 
 crossRate = 0.8 --crossing-over mutation rate
 mutateRate = 0.1 -- mutation rate
-popSize = 50 -- size of the program population
+popSize = 10 -- size of the program population
 popDepth = 6 -- initial maximum depth of newly created individuals
 tournamentSize = 5 -- size of the tournament caracterising the selection pressure
-nbGeneration = 10 -- number of generation the algorithm is run
+nbGeneration = 3 -- number of generation the algorithm is run
 
                             
 -- | represent two I expressions 
