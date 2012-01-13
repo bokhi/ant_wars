@@ -1,6 +1,7 @@
 -- | This module contains the data and functions required to construct ant program expressions
 module Expression (I(..)
                   , IB(..)
+                  , depthI
                   , selectI
                   , replaceIB
                   , generateB
@@ -200,15 +201,15 @@ replaceIB pos i b n = case i of
   Mul i1 i2 -> if pos < succ n + nodeI i1 then Mul (replaceIB pos i1 b (succ n)) i2 else Mul i1 (replaceIB pos i2 b (succ n + nodeI i1))
                            
 -- | Convert a type A to the List of positions that constitute the rectangle 
-rect2List :: Rect -> [(Int, Int)]
-rect2List (x, y, dx, dy) = [(x' `mod` dimension , y' `mod` dimension) | x' <- [x..(x+dx)], y' <- [y..(y+dy)]]
+rect2List :: (Int, Int) -> Rect -> [(Int, Int)]
+rect2List (ax, ay) (x, y, dx, dy) = [(x' `mod` dimension , y' `mod` dimension) | x' <- [(ax+x)..(ax+x+dx)], y' <- [(ay+y)..(ay+y+dy)]] -- x and y are related to the ant position
 
 -- | evaluate a B expression                           
 evalB :: B -> AntNb -> Memory -> Grid -> Bool
-evalB (IsFood r) _ _ g = not $ null $ food g `intersect` rect2List r
+evalB (IsFood r) a _ g = not $ null $ food g `intersect` rect2List (antPosition g a) r
 evalB (IsEnemy r) a _ g = if length (antPositions g) == 1 
                           then False
-                          else elem (antPositions g !! (succ a `mod` 2)) $ rect2List r
+                          else elem (antPositions g !! (succ a `mod` 2)) $ rect2List (antPosition g a) r
 evalB (And b1 b2) a m g = evalB b1 a m g && evalB b2 a m g
 evalB (Or b1 b2) a m g = evalB b1 a m g || evalB b2 a m g
 evalB (Not b) a m g = not $ evalB b a m g
@@ -222,9 +223,9 @@ evalI (If b f1 f2) a m g = if evalB b a m g then evalI f1 a m g else evalI f2 a 
 evalI (Add f1 f2) a m g = evalI f1 a m g + evalI f2 a m g
 evalI (Sub f1 f2) a m g = evalI f1 a m g - evalI f2 a m g
 evalI (Mul f1 f2) a m g = evalI f1 a m g * evalI f2 a m g
-evalI (NbFood r) _ _ g = length $ food g `intersect` rect2List r
-evalI (NbEmpty r) a m g = length (rect2List r) - (evalI (NbFood r) a m g + if evalB (IsEnemy r) a m g then 1 else 0)
-evalI (NbVisited r) a m g = length $ tracks m `intersect` rect2List r
+evalI (NbFood r) a _ g = length $ food g `intersect` rect2List (antPosition g a) r
+evalI (NbEmpty r) a m g = length (rect2List (antPosition g a) r) - (evalI (NbFood r) a m g + if evalB (IsEnemy r) a m g then 1 else 0)
+evalI (NbVisited r) a m g = length $ tracks m `intersect` rect2List (antPosition g a) r
 evalI (Point) a m g = (score g) !! a
 evalI (PointLeft) a m g = nbFood - evalI (Point) a m g
 evalI (TimeLeft) a m g = nbMove - length (tracks m)

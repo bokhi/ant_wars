@@ -1,6 +1,7 @@
 -- | This module contains functions to run matches between different ants
 module Game (Game(..)
             , nbMove
+            , nbMatch
             , initGame
             , runGame
             , runMatch
@@ -8,6 +9,7 @@ module Game (Game(..)
             , tournament
             , matchPercentage
             , matchStat
+            , genAntStat
             , saveStat
             ) where
 
@@ -99,6 +101,12 @@ matchStat m = stat 0 ++ " " ++ stat 1 ++ "\n"
     totalVictory a = foldl (\ victory ant -> if a == ant then succ victory else victory) 0 (map gameWinner m)
     stat a = show (totalVictory a) ++ " " ++ show (totalScore a) ++ " " ++ show (totalKill a)
     
+-- | statistics from selection tournament run between genetic ants    
+genAntStat :: [Game] -> (Int, Int)
+genAntStat m = (totalScore, totalKill)
+  where
+    totalScore = sum $ map (\ g -> score (grid g) !! 0 + score (grid g) !! 1) m
+    totalKill = sum $ map (\ g -> (if kill (ants g !! 0) then 1 else 0) + (if kill (ants g !! 1) then 1 else 0)) m    
 -- | Save stats to a file
 saveStat :: String -> [Game] -> IO ()
 saveStat file m = do

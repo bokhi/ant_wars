@@ -2,9 +2,15 @@
 module Genetic (I(..)
                 , GenAnt
                 , geneticAnt
+                , generation
+                , generationStat
+                , bestIndividual
                 , antGeneticAlgorithm
                 , saveGenAnt
                 , loadGenAnt
+                , savePop
+                , loadPop
+                , saveGenStat
                 ) where
 
 import System.Random
@@ -17,11 +23,10 @@ import Expression
 
 crossRate = 0.8 --crossing-over mutation rate
 mutateRate = 0.1 -- mutation rate
-popSize = 10 -- size of the program population
+popSize = 50 -- size of the program population
 popDepth = 6 -- initial maximum depth of newly created individuals
-tournamentSize = 5 -- size of the tournament caracterising the selection pressure
-nbGeneration = 3 -- number of generation the algorithm is run
-
+tournamentSize = 3 -- size of the tournament caracterising the selection pressure
+nbGeneration = 10 -- number of generation the algorithm is run
                             
 -- | represent two I expressions 
 type GenAnt = (I, I)      
@@ -81,6 +86,9 @@ selectIndividual gen n p = i : selectIndividual g' (pred n) p'
     (g, g') = split gen
     (i, p') = removeNth (fst (randomR (0, pred $ length p) g) :: Int) p
 
+
+
+
 -- | run a tournament to select an individual
 selection :: StdGen -> [GenAnt] -> [GenAnt]
 selection gen [] = []
@@ -90,6 +98,26 @@ selection gen (x:x':xs) = (if winner >= 0.5 then x else x') : selection g' xs
     (g, g') = split gen 
     grids = generateGrids g
     winner = matchPercentage $ runMatch grids [geneticAnt x, geneticAnt x'] -- successive programs are coupled are compete to be selected
+                                         
+-- | game statistics - ((x, y), z) x totalScore y totalKill z number game
+type Stat = ((Int, Int), Int)             
+
+addStat :: Stat -> Stat -> Stat
+addStat ((x, y), z) ((x', y'), z') = ((x + x', y + y'), z + z')
+             
+-- | tournament to select an individual with game statistics            
+selectionStat :: StdGen -> [(Stat, GenAnt)] -> [(Stat, GenAnt)]
+selectionStat gen [] = []
+selectionStat gen [x] = [x]
+selectionStat gen ((s, x):(s', x'):xs) = (stat, (if winner >= 0.5 then x else x')) : selectionStat g' xs
+  where
+    (g, g') = split gen
+    grids = generateGrids g
+    match = runMatch grids [geneticAnt x, geneticAnt x'] -- successive programs are coupled are compete to be selected
+    winner = matchPercentage $ match
+    stat = s `addStat` s' `addStat` (genAntStat match, nbMatch)
+    
+
     
 -- | best individual of the selection process    
 selected :: StdGen -> [GenAnt] -> GenAnt    
@@ -97,6 +125,15 @@ selected _ [x] = x
 selected gen xs = selected g (selection g' xs)
   where
     (g, g') = split gen
+    
+-- | best individual of the selection process with game statistics    
+selectedStat :: StdGen -> [GenAnt] -> (Stat, GenAnt)    
+selectedStat gen xs = selectedStat' gen (zip (repeat ((0, 0), 0)) xs)
+  where
+    selectedStat' _ [x] = x
+    selectedStat' gen xs = selectedStat' g (selectionStat g' xs)
+      where
+        (g, g') = split gen
     
 -- | create 2 new individuals given a population
 newIndividual :: StdGen -> [GenAnt] -> [GenAnt]
@@ -110,8 +147,24 @@ newIndividual gen pop = [i1'', i2'']
     i2 = selected (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
     (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
     i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
-    i2'' = (if mut' < mutateRate then mutateAnt (g !! 8) i2' else i2')
+    i2'' = (if mut' < mutateRate then mutateAnt (g !! 9) i2' else i2')
     
+-- | create 2 new individuals given a population with associated game statistics
+newIndividualStat :: StdGen -> [GenAnt] -> (Stat, [GenAnt])
+newIndividualStat gen pop = (stat, [i1'', i2''])
+  where
+    g = splits 10 gen
+    cro = fst (random $ g !! 0) :: Float
+    mut = fst (random $ g !! 1) :: Float
+    mut'= fst (random $ g !! 2) :: Float
+    (s1, i1) = selectedStat (g !! 3) (selectIndividual (g !! 4) tournamentSize pop)
+    (s2, i2) = selectedStat (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
+    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
+    i2'' = (if mut' < mutateRate then mutateAnt (g !! 9) i2' else i2')
+    stat = s1 `addStat` s2
+
+
 -- | create a new population using selection and genetic operators
 newPop :: StdGen -> [GenAnt] -> [GenAnt]   
 newPop gen pop = newPop' gen pop $ length pop
@@ -122,6 +175,18 @@ newPop gen pop = newPop' gen pop $ length pop
         where
           (g , g') = split gen
     
+-- | create a new population using selection and genetic operators, with statistics
+newPopStat :: StdGen -> [GenAnt] -> (Stat, [GenAnt])
+newPopStat gen pop = newPop' gen pop $ length pop
+  where
+    newPop' gen pop n 
+      | n <= 1 = (((0, 0), 0), [])
+      | otherwise = (s `addStat` s', is ++ is')
+        where
+          (g , g') = split gen
+          (s, is) = newIndividualStat g pop
+          (s', is') = newPop' g' pop (n - 2)
+
 -- | generate an evolved population of ant programms
 generation :: StdGen -> [GenAnt]
 generation gen = generation' g' pop nbGeneration
@@ -130,9 +195,23 @@ generation gen = generation' g' pop nbGeneration
     pop = generatePop g popSize popDepth
     generation' gen pop n 
       | n == 1 = pop
-      | otherwise = generation' g (newPop g' pop) (pred n)
+      | otherwise = (generation' g (newPop g' pop) (pred n))
         where
           (g, g') = split gen
+
+-- | generate an evolved population of ant programms, with statistics
+generationStat :: StdGen -> ([Stat], [GenAnt])
+generationStat gen = generation' g' pop nbGeneration
+  where
+    (g, g') = split gen
+    pop = generatePop g popSize popDepth
+    generation' gen pop n 
+      | n == 1 = ([], pop)
+      | otherwise = (s:s', pop'')
+        where
+          (g, g') = split gen
+          (s, pop') = newPopStat g' pop
+          (s', pop'') = generation' g pop' (pred n)
           
 -- | select the best individual of a population using a round-robin tournament          
 bestIndividual :: StdGen -> [GenAnt] -> GenAnt          
@@ -170,7 +249,16 @@ loadGenAnt :: [Char] -> IO GenAnt
 loadGenAnt file = do
   x <- readFile file
   return (read x :: GenAnt)
+  
+-- | save a population to the disk  
+savePop :: [Char] -> [GenAnt] -> IO ()  
+savePop file pop = writeFile file (show pop)
 
+-- | load a population from the disk
+loadPop :: [Char] -> IO [GenAnt]
+loadPop file = do
+  x <- readFile file
+  return (read x :: [GenAnt])
 
-
-
+-- | save statistics to the disk
+saveGenStat file stats = mapM (\ ((x, y), z) -> appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")) (reverse stats)
