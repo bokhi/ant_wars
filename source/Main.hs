@@ -1,4 +1,5 @@
 import System.Random
+import System.Environment
 import Grid
 import Game
 import Ant
@@ -7,10 +8,13 @@ import Genetic
 import Parameter
 
 main = do
+  args <- getArgs
   gen <- getStdGen
+  let file = head args
+  let param = initParameter $ tail args
   let (g, g') = split gen
   putStrLn "nbFood nbKill nbGame averageDepth"
-  pop <- generationStatIO defaultParameter "../experiment/2.dat" g
+  pop <- generationStatIO param ("../experiment/" ++ file ++ ".dat") g
   savePop "pop.algo" pop
   -- let i = antGeneticAlgorithm g
   -- saveGenAnt "genAnt.algo" i
