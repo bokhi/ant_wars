@@ -15,7 +15,7 @@ main = do
   let (g, g') = split gen
   putStrLn "nbFood nbKill nbGame averageDepth"
   pop <- generationStatIO param (file ++ ".dat") g
-  savePop (file ++ ".pop" pop
+  savePop (file ++ ".pop") pop
   -- let i = antGeneticAlgorithm g
   -- saveGenAnt "genAnt.algo" i
   -- let grids = generateGrids g'
