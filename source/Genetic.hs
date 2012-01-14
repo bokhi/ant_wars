@@ -17,17 +17,12 @@ module Genetic (I(..)
 import System.Random
 import Data.List
 import Helper
+import Parameter
 import Grid
 import Memory
 import Game
 import Expression
 
-crossRate = 0.8 --crossing-over mutation rate
-mutateRate = 0.1 -- mutation rate
-popSize = 100 -- size of the program population
-popDepth = 5 -- initial maximum depth of newly created individuals
-tournamentSize = 5 -- size of the tournament caracterising the selection pressure
-nbGeneration = 50 -- number of generation the algorithm is run
                             
 -- | represent two I expressions 
 type GenAnt = (I, I)      
@@ -55,17 +50,17 @@ crossAnt gen (i1, i1') (i2, i2') = (cross g i1 i2, cross g' i1' i2')
     (g, g') = split gen
 
 -- | mutate a I expression      
-mutate :: StdGen -> I -> I      
-mutate gen i = case selectI pos i 1 of
-  B' b -> replaceIB pos i (generateB g' (nodeB b)) 1
-  I' i' -> replaceII pos i (generateI g' (nodeI i')) 1
+mutate :: Parameter -> StdGen -> I -> I      
+mutate param gen i = case selectI pos i 1 of
+  B' b -> replaceIB pos i (generateB param g' (nodeB b)) 1
+  I' i' -> replaceII pos i (generateI param g' (nodeI i')) 1
   where
     (g, g') = split gen
     pos = fst (randomR (1, nodeI i) g) :: Int
     
 -- | mutation for GenAnt    
-mutateAnt :: StdGen -> GenAnt -> GenAnt    
-mutateAnt gen (i, i') = (mutate g i, mutate g' i')
+mutateAnt :: Parameter -> StdGen -> GenAnt -> GenAnt    
+mutateAnt param gen (i, i') = (mutate param g i, mutate param g' i')
   where
     (g, g') = split gen
     
@@ -74,14 +69,14 @@ averageDepth :: [GenAnt] -> Float
 averageDepth pop = fromIntegral (foldl (\ s (i, i') -> s + depthI i + depthI i') 0 pop) / fromIntegral (length pop * 2)
 
 -- | generate a population of genetic programs
-generatePop :: StdGen -> Int -> Int -> [GenAnt]    
-generatePop _ 0 _ = []
-generatePop gen n d = (i, i') : generatePop g'' (pred n) d
+generatePop :: Parameter -> StdGen -> Int -> Int -> [GenAnt]    
+generatePop _ _ 0 _ = []
+generatePop param gen n d = (i, i') : generatePop param g'' (pred n) d
   where
     (g, gen') = split gen
     (g', g'') = split gen'
-    i = generateI g d -- expression used to evaluate a N direction movement
-    i' = generateI g' d -- expression used to evaluate a NE direction movement
+    i = generateI param g d -- expression used to evaluate a N direction movement
+    i' = generateI param g' d -- expression used to evaluate a NE direction movement
     
 -- | select n individuals from a given population    
 selectIndividual :: StdGen -> Int -> [GenAnt] -> [GenAnt]    
@@ -141,96 +136,96 @@ selectedStat gen xs = selectedStat' gen (zip (repeat ((0, 0), 0)) xs)
         (g, g') = split gen
     
 -- | create 2 new individuals given a population
-newIndividual :: StdGen -> [GenAnt] -> [GenAnt]
-newIndividual gen pop = [i1'', i2'']
+newIndividual :: Parameter -> StdGen -> [GenAnt] -> [GenAnt]
+newIndividual param gen pop = [i1'', i2'']
   where
     g = splits 10 gen
     cro = fst (random $ g !! 0) :: Float
     mut = fst (random $ g !! 1) :: Float
     mut'= fst (random $ g !! 2) :: Float
-    i1 = selected (g !! 3) (selectIndividual (g !! 4) tournamentSize pop)
-    i2 = selected (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
-    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
-    i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
-    i2'' = (if mut' < mutateRate then mutateAnt (g !! 9) i2' else i2')
+    i1 = selected (g !! 3) (selectIndividual (g !! 4) (tournamentSize param) pop)
+    i2 = selected (g !! 5) (selectIndividual (g !! 6) (tournamentSize param) pop)
+    (i1', i2') = if cro < (crossRate param) then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    i1'' = (if mut < (mutateRate param) then mutateAnt param (g !! 8) i1' else i1')
+    i2'' = (if mut' < (mutateRate param) then mutateAnt param (g !! 9) i2' else i2')
     
 -- | create 2 new individuals given a population with associated game statistics
-newIndividualStat :: StdGen -> [GenAnt] -> (Stat, [GenAnt])
-newIndividualStat gen pop = (stat, [i1'', i2''])
+newIndividualStat :: Parameter -> StdGen -> [GenAnt] -> (Stat, [GenAnt])
+newIndividualStat param gen pop = (stat, [i1'', i2''])
   where
     g = splits 10 gen
     cro = fst (random $ g !! 0) :: Float
     mut = fst (random $ g !! 1) :: Float
     mut'= fst (random $ g !! 2) :: Float
-    (s1, i1) = selectedStat (g !! 3) (selectIndividual (g !! 4) tournamentSize pop)
-    (s2, i2) = selectedStat (g !! 5) (selectIndividual (g !! 6) tournamentSize pop)
-    (i1', i2') = if cro < crossRate then crossAnt (g !! 7) i1 i2 else (i1, i2)
-    i1'' = (if mut < mutateRate then mutateAnt (g !! 8) i1' else i1')
-    i2'' = (if mut' < mutateRate then mutateAnt (g !! 9) i2' else i2')
+    (s1, i1) = selectedStat (g !! 3) (selectIndividual (g !! 4) (tournamentSize param) pop)
+    (s2, i2) = selectedStat (g !! 5) (selectIndividual (g !! 6) (tournamentSize param) pop)
+    (i1', i2') = if cro < (crossRate param) then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    i1'' = (if mut < (mutateRate param) then mutateAnt param (g !! 8) i1' else i1')
+    i2'' = (if mut' < (mutateRate param) then mutateAnt param (g !! 9) i2' else i2')
     stat = s1 `addStat` s2
 
 
 -- | create a new population using selection and genetic operators
-newPop :: StdGen -> [GenAnt] -> [GenAnt]   
-newPop gen pop = newPop' gen pop $ length pop
+newPop :: Parameter -> StdGen -> [GenAnt] -> [GenAnt]   
+newPop param gen pop = newPop' param gen pop $ length pop
   where
-    newPop' gen pop n 
+    newPop' param gen pop n 
       | n <= 1 = []
-      | otherwise = newIndividual g pop ++ newPop' g' pop (n - 2)
+      | otherwise = newIndividual param g pop ++ newPop' param g' pop (n - 2)
         where
           (g , g') = split gen
     
 -- | create a new population using selection and genetic operators, with statistics
-newPopStat :: StdGen -> [GenAnt] -> (Stat, [GenAnt])
-newPopStat gen pop = newPop' gen pop $ length pop
+newPopStat :: Parameter -> StdGen -> [GenAnt] -> (Stat, [GenAnt])
+newPopStat param gen pop = newPop' param gen pop $ length pop
   where
-    newPop' gen pop n 
+    newPop' param gen pop n 
       | n <= 1 = (((0, 0), 0), [])
       | otherwise = (s `addStat` s', is ++ is')
         where
           (g , g') = split gen
-          (s, is) = newIndividualStat g pop
-          (s', is') = newPop' g' pop (n - 2)
+          (s, is) = newIndividualStat param g pop
+          (s', is') = newPop' param g' pop (n - 2)
 
 -- | generate an evolved population of ant programms
-generation :: StdGen -> [GenAnt]
-generation gen = generation' g' pop nbGeneration
+generation :: Parameter -> StdGen -> [GenAnt]
+generation param gen = generation' param g' pop (nbGeneration param)
   where
     (g, g') = split gen
-    pop = generatePop g popSize popDepth
-    generation' gen pop n 
+    pop = generatePop param g (popSize param) (popDepth param)
+    generation' param gen pop n 
       | n == 1 = pop
-      | otherwise = (generation' g (newPop g' pop) (pred n))
+      | otherwise = (generation' param g (newPop param g' pop) (pred n))
         where
           (g, g') = split gen
 
 -- | generate an evolved population of ant programms, with statistics
-generationStat :: StdGen -> ([Stat], [GenAnt])
-generationStat gen = generation' g' pop nbGeneration
+generationStat :: Parameter -> StdGen -> ([Stat], [GenAnt])
+generationStat param gen = generation' param g' pop (nbGeneration param)
   where
     (g, g') = split gen
-    pop = generatePop g popSize popDepth
-    generation' gen pop n 
+    pop = generatePop param g (popSize param) (popDepth param)
+    generation' param gen pop n 
       | n == 1 = ([], pop)
       | otherwise = (s:s', pop'')
         where
           (g, g') = split gen
-          (s, pop') = newPopStat g' pop
-          (s', pop'') = generation' g pop' (pred n)
+          (s, pop') = newPopStat param g' pop
+          (s', pop'') = generation' param g pop' (pred n)
           
-generationStatIO :: String -> StdGen -> IO [GenAnt]          
-generationStatIO file gen = generation' g' pop nbGeneration
+generationStatIO :: Parameter -> String -> StdGen -> IO [GenAnt]          
+generationStatIO param file gen = generation' param g' pop (nbGeneration param)
   where
     (g, g') = split gen
-    pop = generatePop g popSize popDepth
-    generation' gen pop n
+    pop = generatePop param g (popSize param) (popDepth param)
+    generation' param gen pop n
       | n == 1 = return pop
       | otherwise = do
         let (g, g') = split gen
-        let (((x, y), z), pop') = newPopStat g' pop
+        let (((x, y), z), pop') = newPopStat param g' pop
         appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")
         putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show $ averageDepth pop') ++ "\n")            
-        pop'' <- generation' g pop' (pred n)
+        pop'' <- generation' param g pop' (pred n)
         return pop''
           
 -- | select the best individual of a population using a round-robin tournament          
@@ -241,8 +236,8 @@ bestIndividual gen pop = robinWinner pop scores
     scores = map matchPercentage (tournament grids selection2 (map (\ x -> geneticAnt x) pop))
 
 -- | perform a complete genetic programming cycle, from population evolution to best individual selection
-antGeneticAlgorithm :: StdGen -> GenAnt
-antGeneticAlgorithm gen = bestIndividual g (generation g')                    
+antGeneticAlgorithm :: Parameter -> StdGen -> GenAnt
+antGeneticAlgorithm param gen = bestIndividual g (generation param g')                    
   where
     (g , g') = split gen
     

@@ -14,18 +14,17 @@ module Expression (I(..)
 import System.Random
 import Data.List
 import Helper
+import Parameter
 import Grid
 import Memory
 import Game
+
 
 -- | (x, y, dx, dy) is a rectangle starting at position (x, y) on the grid and of length dx and dy
 type Rect = (Int, Int, Int, Int)
 
 dx = 4 -- maximum dx size of a rectangle
 dy = 4 -- maximum dy size of a rectangle
-
--- | express which part of the grammar are used to construct B and I expressions - ranging from (0, 0) to (6, 10)
-expressivenessLevel = (6, 10)
 
 -- | Represent boolean function
 data B = IsFood Rect
@@ -105,30 +104,30 @@ depthI i = case i of
   TimeLeft -> 1
       
 -- | given a seed, construct a B expression of depth d
-generateB :: StdGen -> Int -> B            
-generateB gen depth = 
+generateB :: Parameter -> StdGen -> Int -> B            
+generateB param gen depth = 
   if depth <= 1
-  then (case fst (randomR (0, min 1 (fst expressivenessLevel)) (g !! 0)) :: Int of
+  then (case fst (randomR (0, min 1 (fst $ expressivenessLevel param)) (g !! 0)) :: Int of
            0 -> IsFood rect 
            1 -> IsEnemy rect)
-  else (case fst (randomR (0, min 6 (fst expressivenessLevel)) (g !! 0)) :: Int of -- what part of the grammar to generate
+  else (case fst (randomR (0, min 6 (fst $ expressivenessLevel param)) (g !! 0)) :: Int of -- what part of the grammar to generate
            0 -> IsFood rect
            1 -> IsEnemy rect
-           2 -> And (generateB (g !! 2) $ pred depth) (generateB (g !! 3) $ pred depth)
-           3 -> Or (generateB (g !! 2) $ pred depth) (generateB (g !! 3) $ pred depth)
-           4 -> Not (generateB (g !! 2) $ pred depth)
-           5 -> IsSmaller (generateI (g !! 2) (pred depth)) (generateI (g !! 3) (pred depth))
-           6 -> IsEqual (generateI (g !! 2) (pred depth)) (generateI (g !! 3) (pred depth)))
+           2 -> And (generateB param (g !! 2) $ pred depth) (generateB param (g !! 3) $ pred depth)
+           3 -> Or (generateB param (g !! 2) $ pred depth) (generateB param (g !! 3) $ pred depth)
+           4 -> Not (generateB param (g !! 2) $ pred depth)
+           5 -> IsSmaller (generateI param (g !! 2) (pred depth)) (generateI param (g !! 3) (pred depth))
+           6 -> IsEqual (generateI param (g !! 2) (pred depth)) (generateI param (g !! 3) (pred depth)))
     where 
       g = splits 4 gen
       (a:b:c:d:xs) = randoms (g !! 1) :: [Int]
       rect = (a `mod` dimension, b `mod` dimension, c `mod` dx, d `mod` dy)
 
 -- | given a seed, construct a I expression of depth d
-generateI :: StdGen -> Int -> I
-generateI gen depth = 
+generateI :: Parameter -> StdGen -> Int -> I
+generateI param gen depth = 
   if depth <= 1 
-  then case fst (randomR (0, max 0 $ min 6 (snd expressivenessLevel - 4)) (g !! 0)) :: Int of  
+  then case fst (randomR (0, max 0 $ min 6 (snd (expressivenessLevel param) - 4)) (g !! 0)) :: Int of  
     0 -> Const x
     1 -> NbFood rect
     2 -> NbEmpty rect
@@ -136,12 +135,12 @@ generateI gen depth =
     4 -> Point
     5 -> PointLeft
     6 -> TimeLeft
-  else case fst (randomR (0, min 10 (snd expressivenessLevel)) (g !! 0)) :: Int of
+  else case fst (randomR (0, min 10 (snd $ expressivenessLevel param)) (g !! 0)) :: Int of
     0 -> Const x
-    1 -> If (generateB (g !! 3) (pred depth)) (generateI (g !! 4) (pred depth)) (generateI (g !! 5) (pred depth))
-    2 -> Add (generateI (g !! 3)  $ pred depth) (generateI (g !! 4) $ pred depth)
-    3 -> Sub (generateI (g !! 3) $ pred depth) (generateI (g !! 4) $ pred depth)
-    4 -> Mul (generateI (g !! 3) $ pred depth) (generateI (g !! 4) $ pred depth)
+    1 -> If (generateB param (g !! 3) (pred depth)) (generateI param (g !! 4) (pred depth)) (generateI param (g !! 5) (pred depth))
+    2 -> Add (generateI param (g !! 3)  $ pred depth) (generateI param (g !! 4) $ pred depth)
+    3 -> Sub (generateI param (g !! 3) $ pred depth) (generateI param (g !! 4) $ pred depth)
+    4 -> Mul (generateI param (g !! 3) $ pred depth) (generateI param (g !! 4) $ pred depth)
     5 -> NbFood rect
     6 -> NbEmpty rect
     7 -> NbVisited rect
