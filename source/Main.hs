@@ -9,9 +9,9 @@ import Genetic
 main = do
   gen <- getStdGen
   let (g, g') = split gen
-  let (stats, pop) = generationStat g
+  putStrLn "nbFood nbKill nbGame averageDepth"
+  pop <- generationStatIO "../experiment/2.dat" g
   savePop "pop.algo" pop
-  saveGenStat "../experiment/1.dat" stats
   -- let i = antGeneticAlgorithm g
   -- saveGenAnt "genAnt.algo" i
   -- let grids = generateGrids g'

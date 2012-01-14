@@ -21,7 +21,7 @@ import Ant
 import Memory
 
 nbMove = 35 -- number of mooves by player by game
-nbMatch = 10 -- number of games in a match
+nbMatch = 6 -- number of games in a match
 antNumber = 2 -- number of ant playing a game
 
 data Game = Game {initialGrid :: Grid -- to keep trace of the initial grid 

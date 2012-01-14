@@ -4,6 +4,7 @@ module Genetic (I(..)
                 , geneticAnt
                 , generation
                 , generationStat
+                , generationStatIO
                 , bestIndividual
                 , antGeneticAlgorithm
                 , saveGenAnt
@@ -23,10 +24,10 @@ import Expression
 
 crossRate = 0.8 --crossing-over mutation rate
 mutateRate = 0.1 -- mutation rate
-popSize = 50 -- size of the program population
-popDepth = 6 -- initial maximum depth of newly created individuals
-tournamentSize = 3 -- size of the tournament caracterising the selection pressure
-nbGeneration = 10 -- number of generation the algorithm is run
+popSize = 100 -- size of the program population
+popDepth = 5 -- initial maximum depth of newly created individuals
+tournamentSize = 5 -- size of the tournament caracterising the selection pressure
+nbGeneration = 50 -- number of generation the algorithm is run
                             
 -- | represent two I expressions 
 type GenAnt = (I, I)      
@@ -68,6 +69,10 @@ mutateAnt gen (i, i') = (mutate g i, mutate g' i')
   where
     (g, g') = split gen
     
+-- | average depth of a population    
+averageDepth :: [GenAnt] -> Float
+averageDepth pop = fromIntegral (foldl (\ s (i, i') -> s + depthI i + depthI i') 0 pop) / fromIntegral (length pop * 2)
+
 -- | generate a population of genetic programs
 generatePop :: StdGen -> Int -> Int -> [GenAnt]    
 generatePop _ 0 _ = []
@@ -212,6 +217,21 @@ generationStat gen = generation' g' pop nbGeneration
           (g, g') = split gen
           (s, pop') = newPopStat g' pop
           (s', pop'') = generation' g pop' (pred n)
+          
+generationStatIO :: String -> StdGen -> IO [GenAnt]          
+generationStatIO file gen = generation' g' pop nbGeneration
+  where
+    (g, g') = split gen
+    pop = generatePop g popSize popDepth
+    generation' gen pop n
+      | n == 1 = return pop
+      | otherwise = do
+        let (g, g') = split gen
+        let (((x, y), z), pop') = newPopStat g' pop
+        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")
+        putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show $ averageDepth pop') ++ "\n")            
+        pop'' <- generation' g pop' (pred n)
+        return pop''
           
 -- | select the best individual of a population using a round-robin tournament          
 bestIndividual :: StdGen -> [GenAnt] -> GenAnt          

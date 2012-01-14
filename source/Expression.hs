@@ -25,7 +25,7 @@ dx = 4 -- maximum dx size of a rectangle
 dy = 4 -- maximum dy size of a rectangle
 
 -- | express which part of the grammar are used to construct B and I expressions - ranging from (0, 0) to (6, 10)
-expressivenessLevel = (5, 4)
+expressivenessLevel = (6, 10)
 
 -- | Represent boolean function
 data B = IsFood Rect
@@ -128,7 +128,7 @@ generateB gen depth =
 generateI :: StdGen -> Int -> I
 generateI gen depth = 
   if depth <= 1 
-  then case fst (randomR (0, min 6 (snd expressivenessLevel - 4)) (g !! 0)) :: Int of  
+  then case fst (randomR (0, max 0 $ min 6 (snd expressivenessLevel - 4)) (g !! 0)) :: Int of  
     0 -> Const x
     1 -> NbFood rect
     2 -> NbEmpty rect
