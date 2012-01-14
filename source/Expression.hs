@@ -152,7 +152,9 @@ generateI param gen depth =
       x = fst $ randomR (0, 5) (g !! 1) :: Int
       (a:b:c:d:xs) = randoms (g !! 2) :: [Int]
       rect = (a `mod` dimension, b `mod` dimension, c `mod` dx, d `mod` dy)
-                
+      
+
+
 -- | replace b2 in b1 at position pos                
 replaceBB :: Int -> B -> B -> Int -> B  
 replaceBB pos b1 b2 n 

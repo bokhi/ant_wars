@@ -28,8 +28,8 @@ import Expression
 type GenAnt = (I, I)      
 
 -- | crossing-over between i1 and i2
-cross :: StdGen -> I -> I -> (I, I)                            
-cross gen i1 i2 = (i1', i2')
+cross :: Parameter -> StdGen -> I -> I -> (I, I)                            
+cross param gen i1 i2 = (i1'', i2'')
   where
     (g, g') = split gen
     pos1 = fst (randomR (1, nodeI i1) g) :: Int
@@ -42,10 +42,12 @@ cross gen i1 i2 = (i1', i2')
       (B' b, B' _) -> replaceIB pos2 i2 b 1
       (I' i, I' _) -> replaceII pos2 i2 i 1
       _ -> i2 -- the branchs' type are incompatible, no modification is made
+    i1'' = if depthI i1' > (popMaxDepth param) then generateI param g (popDepth param) else i1'
+    i2'' = if depthI i2' > (popMaxDepth param) then generateI param g' (popDepth param) else i2'
       
 -- | crossing-over for GenAnt              
-crossAnt :: StdGen -> GenAnt -> GenAnt -> (GenAnt, GenAnt)
-crossAnt gen (i1, i1') (i2, i2') = (cross g i1 i2, cross g' i1' i2')
+crossAnt :: Parameter -> StdGen -> GenAnt -> GenAnt -> (GenAnt, GenAnt)
+crossAnt param gen (i1, i1') (i2, i2') = (cross param g i1 i2, cross param g' i1' i2')
   where
     (g, g') = split gen
 
@@ -145,7 +147,7 @@ newIndividual param gen pop = [i1'', i2'']
     mut'= fst (random $ g !! 2) :: Float
     i1 = selected (g !! 3) (selectIndividual (g !! 4) (tournamentSize param) pop)
     i2 = selected (g !! 5) (selectIndividual (g !! 6) (tournamentSize param) pop)
-    (i1', i2') = if cro < (crossRate param) then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    (i1', i2') = if cro < (crossRate param) then crossAnt param (g !! 7) i1 i2 else (i1, i2)
     i1'' = (if mut < (mutateRate param) then mutateAnt param (g !! 8) i1' else i1')
     i2'' = (if mut' < (mutateRate param) then mutateAnt param (g !! 9) i2' else i2')
     
@@ -159,7 +161,7 @@ newIndividualStat param gen pop = (stat, [i1'', i2''])
     mut'= fst (random $ g !! 2) :: Float
     (s1, i1) = selectedStat (g !! 3) (selectIndividual (g !! 4) (tournamentSize param) pop)
     (s2, i2) = selectedStat (g !! 5) (selectIndividual (g !! 6) (tournamentSize param) pop)
-    (i1', i2') = if cro < (crossRate param) then crossAnt (g !! 7) i1 i2 else (i1, i2)
+    (i1', i2') = if cro < (crossRate param) then crossAnt param (g !! 7) i1 i2 else (i1, i2)
     i1'' = (if mut < (mutateRate param) then mutateAnt param (g !! 8) i1' else i1')
     i2'' = (if mut' < (mutateRate param) then mutateAnt param (g !! 9) i2' else i2')
     stat = s1 `addStat` s2
@@ -223,8 +225,9 @@ generationStatIO param file gen = generation' param g' pop (nbGeneration param)
       | otherwise = do
         let (g, g') = split gen
         let (((x, y), z), pop') = newPopStat param g' pop
-        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")
-        putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show $ averageDepth pop') ++ "\n")            
+        let avDepth = averageDepth pop'
+        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
+        putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")            
         pop'' <- generation' param g pop' (pred n)
         return pop''
           
