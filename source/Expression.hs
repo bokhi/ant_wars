@@ -9,6 +9,7 @@ module Expression (I(..)
                   , nodeI
                   , replaceII
                   , generateI
+                  , recSimplifyI
                   , evalI) where
 
 import System.Random
@@ -33,7 +34,9 @@ data B = IsFood Rect
        | Not B
        | IsSmaller I I 
        | IsEqual I I 
-       deriving (Show, Read)
+       | T
+       | F
+       deriving (Eq, Show, Read)
 
 -- | Represent integer function
 data I = Const Int
@@ -47,19 +50,20 @@ data I = Const Int
        | Point
        | PointLeft
        | TimeLeft
-       deriving (Show, Read)
+       deriving (Eq, Show, Read)
                            
 -- | number of nodes in a B expression
 nodeB :: B -> Int
 nodeB b = case b of
   IsFood _ -> 1
   IsEnemy _ -> 1
+  T -> 1
+  F -> 1
   And b1 b2 -> succ $ nodeB b1 + nodeB b2
   Or b1 b2 -> succ $ nodeB b1 + nodeB b2
   Not b' -> succ $ nodeB b'
   IsSmaller i1 i2 -> succ $ nodeI i1 + nodeI i2
   IsEqual i1 i2 -> succ $ nodeI i1 + nodeI i2
-  
   
 -- | number of nodes in a B expression  
 nodeI :: I -> Int
@@ -81,6 +85,8 @@ depthB :: B -> Int
 depthB b = case b of
   IsFood _ -> 1
   IsEnemy _ -> 1
+  T -> 1
+  F -> 1
   And b1 b2 -> succ $ depthB b1 `max` depthB b2
   Or b1 b2 -> succ $ depthB b1 `max` depthB b2
   Not b' -> succ $ depthB b'
@@ -151,8 +157,6 @@ generateI param gen depth =
       x = fst $ randomR (0, 5) (g !! 1) :: Int
       (a:b:c:d:xs) = randoms (g !! 2) :: [Int]
       rect = (a `mod` dimension, b `mod` dimension, c `mod` dx, d `mod` dy)
-      
-
 
 -- | replace b2 in b1 at position pos                
 replaceBB :: Int -> B -> B -> Int -> B  
@@ -200,6 +204,61 @@ replaceIB pos i b n = case i of
   Sub i1 i2 -> if pos < succ n + nodeI i1 then Sub (replaceIB pos i1 b (succ n)) i2 else Sub i1 (replaceIB pos i2 b (succ n + nodeI i1))
   Mul i1 i2 -> if pos < succ n + nodeI i1 then Mul (replaceIB pos i1 b (succ n)) i2 else Mul i1 (replaceIB pos i2 b (succ n + nodeI i1))
                            
+-- | simplify a B expression
+recSimplifyB :: B -> B
+recSimplifyB b = if nodeB b == nodeB b' then b else recSimplifyB b'
+  where
+    b' = simplifyB b
+simplifyB (Not (Not b)) = simplifyB b
+simplifyB (And T b) = simplifyB b
+simplifyB (And b T) = simplifyB b
+simplifyB (Or T b) = T
+simplifyB (Or b T) = T
+simplifyB (And F b) = F
+simplifyB (And b F) = F
+simplifyB (Or F b) = simplifyB b
+simplifyB (Or b F) = simplifyB b
+simplifyB (Not T) = F
+simplifyB (Not F) = T
+simplifyB b@(And b' b'') 
+  | b' == b'' = simplifyB b' 
+  | otherwise = And (simplifyB b') (simplifyB b'')
+simplifyB b@(Or b' b'') 
+  | b' == b'' = simplifyB b' 
+  | otherwise = Or (simplifyB b') (simplifyB b'')
+simplifyB (IsSmaller (Const x) (Const x')) = if x < x' then T else F
+simplifyB (IsSmaller i i') =  (IsSmaller (simplifyI i) (simplifyI i'))
+simplifyB (IsEqual i i') 
+  | i == i' = T 
+  | otherwise = IsEqual (simplifyI i) (simplifyI i')
+simplifyB (Not b) =  (Not (simplifyB b))
+simplifyB b = b
+
+-- | simplify a I expression
+recSimplifyI :: I -> I
+recSimplifyI i = if nodeI i == nodeI i' then i else recSimplifyI i'
+  where
+    i' = simplifyI i
+simplifyI (If T i i') = simplifyI i
+simplifyI (If F i i') = simplifyI i'
+simplifyI (Add (Const 0) i) = simplifyI i
+simplifyI (Add i (Const 0)) = simplifyI i
+simplifyI (Add (Const x) (Const x')) = Const (x + x')
+simplifyI (Sub i (Const 0)) = simplifyI i
+simplifyI (Sub (Const x) (Const x')) = Const (x - x')
+simplifyI (Mul (Const 0) i) = Const 0
+simplifyI (Mul i (Const 0)) = Const 0
+simplifyI (Mul (Const x) (Const x')) = Const (x * x')
+simplifyI (If b i i') = If (simplifyB b) (simplifyI i) (simplifyI i')
+simplifyI (Add i i')  
+  | i == i' = Mul (Const 2) i 
+  | otherwise = Add (simplifyI i) (simplifyI i')
+simplifyI (Sub i i') 
+  | i == i' = Const 0
+  | otherwise = Sub (simplifyI i) (simplifyI i')
+simplifyI (Mul i i') = Mul (simplifyI i) (simplifyI i')
+simplifyI i = i
+
 withinRect :: (Int, Int) -> Rect -> (Int, Int) -> Bool
 withinRect (x', y') (x, y, dx, dy) (a, b) = dist x'' a + dist ((x'' + dx) `mod` dimension) a == dx && dist y'' b + dist ((y'' + dy) `mod` dimension) b == dy
   where
@@ -210,6 +269,8 @@ withinRect (x', y') (x, y, dx, dy) (a, b) = dist x'' a + dist ((x'' + dx) `mod` 
 
 -- | evaluate a B expression                           
 evalB :: B -> AntNb -> Memory -> Grid -> Bool
+evalB T _ _ _ = True
+evalB F _ _ _ = False
 evalB (IsFood r) a _ g = any (withinRect (antPosition g a) r) $ food g
 evalB (IsEnemy r) a _ g = if length (antPositions g) == 1 
                           then False

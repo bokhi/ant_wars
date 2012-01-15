@@ -28,7 +28,7 @@ type GenAnt = (I, I)
 
 -- | crossing-over between i1 and i2
 cross :: Parameter -> StdGen -> I -> I -> (I, I)                            
-cross param gen i1 i2 = (i1'', i2'')
+cross param gen i1 i2 = (recSimplifyI i1'', recSimplifyI i2'')
   where
     (g, g') = split gen
     pos1 = fst (randomR (1, nodeI i1) g) :: Int
@@ -53,8 +53,8 @@ crossAnt param gen (i1, i1') (i2, i2') = (cross param g i1 i2, cross param g' i1
 -- | mutate a I expression      
 mutate :: Parameter -> StdGen -> I -> I      
 mutate param gen i = case selectI pos i 1 of
-  B' b -> replaceIB pos i (generateB param g' (nodeB b)) 1
-  I' i' -> replaceII pos i (generateI param g' (nodeI i')) 1
+  B' b -> recSimplifyI $ replaceIB pos i (generateB param g' (nodeB b)) 1
+  I' i' -> recSimplifyI $ replaceII pos i (generateI param g' (nodeI i')) 1
   where
     (g, g') = split gen
     pos = fst (randomR (1, nodeI i) g) :: Int
@@ -75,7 +75,7 @@ generatePop param gen n _ = generatePop' param gen n []
   where
     generatePop' param gen n pop
       | n == 0 = pop
-      | otherwise = generatePop' param (g !! 2) (pred n) ((i, i') : pop)
+      | otherwise = generatePop' param (g !! 2) (pred n) ((recSimplifyI i, recSimplifyI i') : pop)
         where
           g = splits 3 gen
           i = generateI param (g !! 0) (popDepth param) -- expression used to evaluate a N direction movement
