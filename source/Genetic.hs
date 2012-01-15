@@ -103,7 +103,7 @@ selection gen x = selection' gen x []
         where
           (g, g') = split gen 
           grids = generateGrids g
-          winner = matchPercentage $ runMatch grids [geneticAnt y, geneticAnt y'] -- successive programs are coupled are compete to be selected
+          winner = matchPercentage $ runMatch grids [geneticAnt y, geneticAnt y'] -- successive programs are coupled and compete to be selected
 
 -- | game statistics - ((x, y), z) x totalScore y totalKill z number game
 type Stat = ((Int, Int), Int)             
