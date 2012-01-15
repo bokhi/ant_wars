@@ -39,20 +39,35 @@ data Direction = NW | N | NE | E | SE | S | SW | W deriving (Show, Eq, Read)
 -- | a number associated to ant, 0 for ant1, 1 for ant2
 type AntNb = Int
 
--- | Generate an infinite number of dimension*dimension grids containing nbFood pieces of food
+-- -- | Generate an infinite number of dimension*dimension grids containing nbFood pieces of food
+-- generateGrids :: StdGen -> [Grid]
+-- generateGrids gen = generateGrids' (randomRs (0, (pred dimension)) gen :: [Int])
+--   where
+--     generateFood random l = -- exactly nbFood pieces are wanted, they have to differ from each other and from the ants' positions
+--         if length l == nbFood
+--         then (l, random)
+--         else 
+--           let (x:x':xs) = random in  
+--           if (x, x') `elem` l || (x, x') `elem` antInitialPositions -- to test if the food created is already on the ant initial positions, or covers another piece of food
+--           then generateFood xs l
+--           else generateFood xs ((x, x'):l)
+--     generateGrids' random = (Grid food antInitialPositions antInitialScore):generateGrids' random'
+--         where (food, random') = generateFood random []
+              
 generateGrids :: StdGen -> [Grid]
-generateGrids gen = generateGrids' (randomRs (0, (pred dimension)) gen :: [Int])
-  where
-    generateFood random l = -- exactly nbFood pieces are wanted, they have to differ from each other and from the ants' positions
-        if length l == nbFood
-        then (l, random)
-        else 
-          let (x:x':xs) = random in  
-          if (x, x') `elem` l || (x, x') `elem` antInitialPositions -- to test if the food created is already on the ant initial positions, or covers another piece of food
-          then generateFood xs l
-          else generateFood xs ((x, x'):l)
-    generateGrids' random = (Grid food antInitialPositions antInitialScore):generateGrids' random'
-        where (food, random') = generateFood random []
+generateGrids gen = generateGrid' gen
+  where 
+    generateFood gen random l n = 
+      if length l == nbFood
+      then l
+      else generateFood g' random' (x:l) (n - 1)
+        where
+          (g, g') = split gen 
+          (x, random') = removeNth (fst (randomR (0, n-1) g) :: Int) random
+    cs = [(x, y) | x <- [0..(pred dimension)], y <- [0..(pred dimension)], (x, y) /= antInitialPositions !! 0, (x, y) /= antInitialPositions !! 1]
+    generateGrid' gen = Grid (generateFood g cs [] (length cs)) antInitialPositions antInitialScore : generateGrid' g'
+      where
+        (g, g') = split gen
 
 -- | The grid can be represented as a ASCII table, F for pieces of food, 0 and 1 for ant0 and ant1 respectively     
 -- the ant playing is always represented by a 0 and the opponent by a 1              

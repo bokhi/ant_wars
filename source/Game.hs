@@ -57,11 +57,11 @@ endGame g = any (\ a -> length (directions a) >= nbMove) (ants g)
             
 -- | run a game between two ants     
 runGame :: Game -> Game
-runGame g = runGame' g 0 -- the ant0 starts playing
+runGame g = runGame' g 0 (nbMove * antNumber) -- the ant0 starts playing
   where
-    runGame' g i = if endGame g 
-                   then g
-                   else runGame' (updateGame g i) (succ i `mod` antNumber)
+    runGame' g i n 
+      | n == 0 = g
+      | otherwise = runGame' (updateGame g i) (succ i `mod` antNumber) (pred n)
                         
 -- | Winner of a game
 gameWinner :: Game -> AntNb    
