@@ -31,7 +31,7 @@ xlabel ("generation");
 ylabel ("average amount of food collected per game");
 legend("location", "northwest");
 legend("right");
-title ("evoluation of the average amount of food collected per game per generation - tournamentSize 5");
+title ("evolution of the average amount of food collected per game per generation - tournamentSize 5");
 print ("popEvolution_10-1000.png")
 close;
 
@@ -47,6 +47,6 @@ xlabel ("generation");
 ylabel ("average amount of food collected per game");
 legend("location", "northwest");
 legend("right");
-title ("evoluation of the average amount of food collected per game per generation - tournamentSize 5");
+title ("evolution of the average amount of food collected per game per generation - tournamentSize 5");
 print ("popEvolution_250-2000.png")
 close;

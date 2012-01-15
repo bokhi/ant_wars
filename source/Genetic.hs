@@ -171,7 +171,6 @@ newIndividualStat param gen pop = (stat, (i1'', i2''))
     i2'' = (if mut' < (mutateRate param) then mutateAnt param (g !! 9) i2' else i2')
     stat = s1 `addStat` s2
 
-
 -- | create a new population using selection and genetic operators
 newPop :: Parameter -> StdGen -> [GenAnt] -> [GenAnt]   
 newPop param gen pop = newPop' param gen pop (length pop) []          
