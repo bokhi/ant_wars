@@ -16,9 +16,9 @@ data Parameter = Parameter { crossRate :: Float --crossing-over mutation rate
                                       
 defaultParameter = Parameter { crossRate = 0.5
                              , mutateRate = 0.2
-                             , popSize = 500
-                             , popDepth = 2
-                             , popMaxDepth = 10
+                             , popSize = 750
+                             , popDepth = 7
+                             , popMaxDepth = 15
                              , tournamentSize = 10
                              , nbGeneration = 50
                              , expressivenessLevel = (9, 9)
