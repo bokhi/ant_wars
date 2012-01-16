@@ -231,9 +231,9 @@ generationStatIO param file gen = generation' param g' pop (nbGeneration param)
         let (g, g') = split gen
         let (((x, y), z), pop') = newPopStat param g' pop
         let avDepth = averageDepth pop'
-        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
+        appendFile (file ++ ".dat") ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
         putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")            
-        savePop (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".pop") pop
+        savePop (file ++ "_" ++ (show (nbGeneration param - n))) pop
         pop'' <- generation' param g pop' (pred n)
         return pop''
           
@@ -248,11 +248,11 @@ generationStatBestIO param file gen = generation' param g' pop (nbGeneration par
         let g = splits 3 gen
         let (((x, y), z), pop') = newPopStat param (g !! 0) pop
         let avDepth = averageDepth pop'
-        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
+        appendFile (file ++ ".dat") ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
         putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
         let ant = bestIndividual (g !! 1) pop
-        saveGenAnt (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".ant") ant
-        savePop (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".pop") pop
+        saveGenAnt (file ++ "_" ++ (show (nbGeneration param - n))) ant
+        savePop (file ++ "_" ++ (show (nbGeneration param - n))) pop
         pop'' <- generation' param (g !! 2) pop' (pred n)
         return pop''
 
@@ -291,18 +291,18 @@ saveGenAnt file i = writeFile (file ++ ".ant") (show i)
 -- | retrieve a genetic program from the file system
 loadGenAnt :: [Char] -> IO GenAnt
 loadGenAnt file = do
-  x <- readFile file
+  x <- readFile (file ++ ".pop")
   return (read x :: GenAnt)
   
 -- | save a population to the disk  
 savePop :: [Char] -> [GenAnt] -> IO ()  
-savePop file pop = writeFile file (show pop)
+savePop file pop = writeFile (file ++ ".pop") (show pop)
 
 -- | load a population from the disk
 loadPop :: [Char] -> IO [GenAnt]
 loadPop file = do
-  x <- readFile file
+  x <- readFile (file ++ ".pop")
   return (read x :: [GenAnt])
 
 -- | save statistics to the disk
-saveGenStat file stats = mapM (\ ((x, y), z) -> appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")) (reverse stats)
+saveGenStat file stats = mapM (\ ((x, y), z) -> appendFile (file ++ ".stat") ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ "\n")) (reverse stats)

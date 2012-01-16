@@ -18,7 +18,7 @@ main =
       "pop" -> -- store every step of the pop evolution  
         do
           putStrLn "nbFood nbKill nbGame averageDepth"
-          pop <- generationStatIO param ("../experiment/" ++ file ++ ".dat") gen
+          pop <- generationStatIO param ("../experiment/" ++ file) gen
           savePop (file ++ ".pop") pop
       "ant" -> -- read a pop file and find its best ant
         do
@@ -29,7 +29,7 @@ main =
         do
           let (g, g') = split gen
           putStrLn "nbFood nbKill nbGame averageDepth"
-          pop <- generationStatBestIO param ("../experiment/" ++ file ++ ".dat") g
+          pop <- generationStatBestIO param ("../experiment/" ++ file) g
           savePop (file ++ ".pop") pop
           let ind = bestIndividual g' pop
           saveGenAnt file ind
