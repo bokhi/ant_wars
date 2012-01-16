@@ -7,16 +7,29 @@ import Helper
 import Genetic
 import Parameter
 
-main = do
-  args <- getArgs
-  gen <- getStdGen
-  let file = head args
-  let param = initParameter $ tail args
-  let (g, g') = split gen
-  putStrLn "nbFood nbKill nbGame averageDepth"
-  pop <- generationStatIO param ("../experiment/" ++ file ++ ".dat") g
-  savePop (file ++ ".pop") pop
-  -- let i = antGeneticAlgorithm g
-  -- saveGenAnt "genAnt.algo" i
-  -- let grids = generateGrids g'
-  -- mapM (\ x -> putStrLn (show (matchPercentage x))) (tournament grids selection5 ((geneticAnt i) : ruleBasedAnts'))
+main = 
+  do
+    args <- getArgs
+    gen <- getStdGen
+    let action = head args
+    let file = head (drop 1 args)
+    let param = initParameter $ drop 2 args
+    case action of
+      "pop" -> -- store every step of the pop evolution  
+        do
+          putStrLn "nbFood nbKill nbGame averageDepth"
+          pop <- generationStatIO param ("../experiment/" ++ file ++ ".dat") gen
+          savePop (file ++ ".pop") pop
+      "ant" -> -- read a pop file and find its best ant
+        do
+          pop <- loadPop (file ++ ".pop")
+          let ind = bestIndividual gen pop
+          saveGenAnt file ind
+      _ -> -- combine the two previous cases
+        do
+          let (g, g') = split gen
+          putStrLn "nbFood nbKill nbGame averageDepth"
+          pop <- generationStatBestIO param ("../experiment/" ++ file ++ ".dat") g
+          savePop (file ++ ".pop") pop
+          let ind = bestIndividual g' pop
+          saveGenAnt file ind

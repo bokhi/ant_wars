@@ -14,14 +14,14 @@ data Parameter = Parameter { crossRate :: Float --crossing-over mutation rate
                            , expressivenessLevel ::  (Int, Int) -- express which part of the grammar are used to construct B and I expressions - ranging from (0, 0) to (6, 10)
                            } deriving (Show, Read)
                                       
-defaultParameter = Parameter { crossRate = 0.7
-                             , mutateRate = 0.1
-                             , popSize = 50
-                             , popDepth = 5
+defaultParameter = Parameter { crossRate = 0.5
+                             , mutateRate = 0.2
+                             , popSize = 500
+                             , popDepth = 2
                              , popMaxDepth = 10
-                             , tournamentSize = 3
+                             , tournamentSize = 10
                              , nbGeneration = 50
-                             , expressivenessLevel = (5, 4)
+                             , expressivenessLevel = (9, 9)
                              }
 initParameter [] = defaultParameter
 initParameter (cr:mu:ps:pd:pmd:ts:nb:eb:ei:[]) = Parameter { crossRate = read cr :: Float                              

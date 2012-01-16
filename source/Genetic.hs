@@ -5,6 +5,7 @@ module Genetic (I(..)
                 , generation
                 , generationStat
                 , generationStatIO
+                , generationStatBestIO
                 , bestIndividual
                 , antGeneticAlgorithm
                 , saveGenAnt
@@ -232,9 +233,30 @@ generationStatIO param file gen = generation' param g' pop (nbGeneration param)
         let avDepth = averageDepth pop'
         appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
         putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")            
+        savePop (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".pop") pop
         pop'' <- generation' param g pop' (pred n)
         return pop''
           
+generationStatBestIO :: Parameter -> String -> StdGen -> IO [GenAnt]          
+generationStatBestIO param file gen = generation' param g' pop (nbGeneration param)
+  where
+    (g, g') = split gen
+    pop = generatePop param g (popSize param) (popDepth param)
+    generation' param gen pop n
+      | n == 1 = return pop
+      | otherwise = do
+        let g = splits 3 gen
+        let (((x, y), z), pop') = newPopStat param (g !! 0) pop
+        let avDepth = averageDepth pop'
+        appendFile file ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
+        putStr ((show x) ++ " " ++ (show y) ++ " " ++ (show z) ++ " " ++ (show avDepth) ++ "\n")
+        let ant = bestIndividual (g !! 1) pop
+        saveGenAnt (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".ant") ant
+        savePop (file ++ "_" ++ (show (nbGeneration param - n)) ++ ".pop") pop
+        pop'' <- generation' param (g !! 2) pop' (pred n)
+        return pop''
+
+
 -- | select the best individual of a population using a round-robin tournament          
 bestIndividual :: StdGen -> [GenAnt] -> GenAnt          
 bestIndividual gen pop = robinWinner pop scores
@@ -264,7 +286,7 @@ geneticAnt (t, t') a m g = d
 
 -- | save a genetic program to the file system
 saveGenAnt :: [Char] -> GenAnt -> IO ()    
-saveGenAnt file i = writeFile file (show i)
+saveGenAnt file i = writeFile (file ++ ".ant") (show i)
 
 -- | retrieve a genetic program from the file system
 loadGenAnt :: [Char] -> IO GenAnt
