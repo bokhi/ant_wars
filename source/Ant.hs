@@ -206,17 +206,12 @@ hiderSearcher a m g =
 
 hiderSearcher' a m g = hiderSearcher a m (memoryGrid (updateMemory m a g) g)
 
--- | test function
+-- | ant using hybrid strategy
 superSearcher :: AntNb -> Memory -> Grid -> Direction
 superSearcher a m g = d
   where
     aPos = antPosition g a
-    --ePos d = ((antPosition g (succ a)), d)
     ds = [N, W, S, E, NE, NW, SW, SE]
-    -- nPos d n = ((updatePos ((fst aPos + n), (snd aPos)) d), d)
-    -- pInt d = (map (nPos d) [1..3])++(intersect [(ePos d)] (map (nPos d) [1..3]))
-    -- mp = maximumBy (comparing length) (map pInt ds)
-    -- INTERSECTION WITH FOOD
     nPos d n = ((updatePos ((fst aPos + n), (snd aPos)) d), d)
     foody d = zip (food g) (replicate (length (food g)) d) -- Keep track of d
     pInt d = (map (nPos d) [1..5])++(intersect (foody d) (map (nPos d) [1..5]))
