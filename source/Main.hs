@@ -22,9 +22,9 @@ main =
           savePop (file ++ ".pop") pop
       "ant" -> -- read a pop file and find its best ant
         do
-          pop <- loadPop file
+          pop <- loadPop ("../experiment/" ++ file)
           let ind = bestIndividual gen pop
-          saveGenAnt file ind
+          saveGenAnt ("../experiment/" ++ file) ind
       _ -> -- combine the two previous cases
         do
           let (g, g') = split gen
