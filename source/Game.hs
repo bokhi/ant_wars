@@ -33,7 +33,7 @@ data Game = Game {initialGrid :: Grid -- to keep trace of the initial grid
 type AntMove = AntNb -> Memory -> Grid -> Direction
 
 instance Show Game where
-  show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n"
+  show g = show (initialGrid g) ++ "\n" ++ show (ants g) ++ "\n" ++ show (score $ grid g) ++ "\n"
 
 -- | Initialise a game
 initGame :: Grid -> [AntMove] -> Game

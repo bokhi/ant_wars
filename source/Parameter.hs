@@ -16,12 +16,12 @@ data Parameter = Parameter { crossRate :: Float --crossing-over mutation rate
                                       
 defaultParameter = Parameter { crossRate = 0.5
                              , mutateRate = 0.2
-                             , popSize = 750
+                             , popSize = 500
                              , popDepth = 7
                              , popMaxDepth = 15
                              , tournamentSize = 10
                              , nbGeneration = 50
-                             , expressivenessLevel = (9, 9)
+                             , expressivenessLevel = (12, 12)
                              }
 initParameter [] = defaultParameter
 initParameter (cr:mu:ps:pd:pmd:ts:nb:eb:ei:[]) = Parameter { crossRate = read cr :: Float                              

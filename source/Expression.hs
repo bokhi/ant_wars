@@ -50,6 +50,7 @@ data I = Const Int
        | Point
        | PointLeft
        | TimeLeft
+       | FoodHope Rect
        deriving (Eq, Show, Read)
                            
 -- | number of nodes in a B expression
@@ -79,6 +80,7 @@ nodeI i = case i of
   Point -> 1
   PointLeft -> 1
   TimeLeft -> 1
+  FoodHope _ -> 1
   
 -- | depth of a B expression
 depthB :: B -> Int
@@ -107,6 +109,7 @@ depthI i = case i of
   Point -> 1
   PointLeft -> 1
   TimeLeft -> 1
+  FoodHope _ -> 1
       
 -- | given a seed, construct a B expression of depth d
 generateB :: Parameter -> StdGen -> Int -> B            
@@ -132,7 +135,7 @@ generateB param gen depth =
 generateI :: Parameter -> StdGen -> Int -> I
 generateI param gen depth = 
   if depth <= 1 
-  then case fst (randomR (0, max 0 $ min 6 (snd (expressivenessLevel param) - 4)) (g !! 0)) :: Int of  
+  then case fst (randomR (0, max 0 $ min 7 (snd (expressivenessLevel param) - 4)) (g !! 0)) :: Int of  
     0 -> Const x
     1 -> NbFood rect
     2 -> NbEmpty rect
@@ -140,7 +143,8 @@ generateI param gen depth =
     4 -> Point
     5 -> PointLeft
     6 -> TimeLeft
-  else case fst (randomR (0, min 10 (snd $ expressivenessLevel param)) (g !! 0)) :: Int of
+    7 -> FoodHope rect
+  else case fst (randomR (0, min 11 (snd $ expressivenessLevel param)) (g !! 0)) :: Int of
     0 -> Const x
     1 -> If (generateB param (g !! 3) (pred depth)) (generateI param (g !! 4) (pred depth)) (generateI param (g !! 5) (pred depth))
     2 -> Add (generateI param (g !! 3)  $ pred depth) (generateI param (g !! 4) $ pred depth)
@@ -152,6 +156,7 @@ generateI param gen depth =
     8 -> Point
     9 -> PointLeft
     10 -> TimeLeft
+    11 -> FoodHope rect
     where
       g = splits 6 gen
       x = fst $ randomR (0, 5) (g !! 1) :: Int
@@ -294,6 +299,7 @@ evalI (NbVisited r) a m g = foldl (\ s p -> if withinRect (antPosition g a) r p 
 evalI (Point) a m g = (score g) !! a
 evalI (PointLeft) a m g = nbFood - evalI (Point) a m g
 evalI (TimeLeft) a m g = nbMove - length (tracks m)
+evalI (FoodHope (x, y, dx, dy)) a m g = evalI (NbFood ((-2) `mod` dimension, (-2) `mod` dimension, 2, 2)) a m g
 
 -- | data of type I or B use when the returned node's type is unknown
 data IB = B' B | I' I deriving Show

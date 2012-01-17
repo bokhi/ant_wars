@@ -33,3 +33,6 @@ main =
           savePop (file ++ ".pop") pop
           let ind = bestIndividual g' pop
           saveGenAnt file ind
+
+
+

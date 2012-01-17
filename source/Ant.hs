@@ -3,8 +3,8 @@ module Ant (Ant(..)
            , initAnt
            , updateAnt
            , testMove
-           , gready
-           , gready'
+           , greedy
+           , greedy'
            , user
            , predator
            , predator'
@@ -24,8 +24,8 @@ import Grid
 import Memory
 
 
-ruleBasedAnts = [testMove, gready, predator, hider, wise, precautionary] -- list of rule-based ants developed
-ruleBasedAnts' = [gready', predator', hider', wise', precautionary'] -- the ' denote the fact that the ants use their memory to act
+ruleBasedAnts = [testMove, greedy, predator, hider, wise, precautionary] -- list of rule-based ants developed
+ruleBasedAnts' = [greedy', predator', hider', wise', precautionary'] -- the ' denote the fact that the ants use their memory to act
 
 data Ant = Ant {antNb :: AntNb -- a number qualifying the ant : 0 or 1
                , directions :: [Direction] -- direction moved to from the initial position - reverse order
@@ -56,16 +56,16 @@ testMove :: AntNb -> Memory -> Grid -> Direction
 testMove a m g = NW
               
 -- | find the nearest piece of food
-gready :: AntNb -> Memory -> Grid -> Direction
-gready a m g = if null (food g) then NW else d
+greedy :: AntNb -> Memory -> Grid -> Direction
+greedy a m g = if null (food g) then NW else d
   where
     aPos = antPosition g a
     distanceFood d = minimum $ map (distance (updatePos aPos d)) (food g) -- distance to the nearest piece of food given a direction
     ds = [N, W, S, E, NE, NW, SW, SE]
     d = minimumBy (\ d d' -> compare (distanceFood d) (distanceFood d')) ds 
     
-gready' :: AntNb -> Memory -> Grid -> Direction    
-gready' a m g = gready a m (memoryGrid (updateMemory m a g) g)
+greedy' :: AntNb -> Memory -> Grid -> Direction    
+greedy' a m g = greedy a m (memoryGrid (updateMemory m a g) g)
     
 -- | user input function        
 user :: AntNb -> Memory -> Grid -> Direction
@@ -81,7 +81,7 @@ predator :: AntNb -> Memory -> Grid -> Direction
 predator a m g = 
   if length (antPositions g) > 1 -- if there is a prey
   then d' 
-  else gready a m g
+  else greedy a m g
     where
       aPos = antPosition g a
       ds = [N, W, S, E, NE, NW, SW, SE]
@@ -90,12 +90,12 @@ predator a m g =
     
 predator' a m g = predator a m (memoryGrid (updateMemory m a g) g)
       
--- | try to escape if an opponent is present within the fov, otherwise gready strategy
+-- | try to escape if an opponent is present within the fov, otherwise greedy strategy
 hider :: AntNb -> Memory -> Grid -> Direction
 hider a m g = 
   if length (antPositions g) > 1 -- if there is a predator
   then d'
-  else gready a m g
+  else greedy a m g
     where   
       aPos = antPosition g a
       ds = [N, W, S, E, NE, NW, SW, SE]
@@ -111,8 +111,8 @@ wise a m g =
   then 
     if distanceOpponent < distanceFood
     then hider a m g
-    else gready a m g
-  else gready a m g
+    else greedy a m g
+  else greedy a m g
     where   
       aPos = antPosition g a
       distanceFood = minimum $ map (distance aPos) (food g)
@@ -125,7 +125,7 @@ precautionary :: AntNb -> Memory -> Grid -> Direction
 precautionary a m g = 
   if length (antPositions g') > 1 && score g !! a < nbFood `div` 2 
   then wise a m g
-  else gready a m g
+  else greedy a m g
     where g' = fovGrid g a
           
 precautionary' a m g = precautionary a m (memoryGrid (updateMemory m a g) g)

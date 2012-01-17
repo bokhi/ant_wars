@@ -123,7 +123,7 @@ selectionStat gen xs = selectionStat' gen xs []
         where
           (g, g') = split gen
           grids = generateGrids g
-          match = runMatch grids [geneticAnt x, geneticAnt x'] -- successive programs are coupled are compete to be selected
+          match = runMatch grids [geneticAnt x, geneticAnt x'] -- successive programs are coupled and compete to be selected
           winner = matchPercentage $ match
           stat = s `addStat` s' `addStat` (genAntStat match, nbMatch)
     
@@ -291,7 +291,7 @@ saveGenAnt file i = writeFile (file ++ ".ant") (show i)
 -- | retrieve a genetic program from the file system
 loadGenAnt :: [Char] -> IO GenAnt
 loadGenAnt file = do
-  x <- readFile (file ++ ".pop")
+  x <- readFile (file ++ ".ant")
   return (read x :: GenAnt)
   
 -- | save a population to the disk  
