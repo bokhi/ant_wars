@@ -22,7 +22,7 @@ main =
           savePop (file ++ ".pop") pop
       "ant" -> -- read a pop file and find its best ant
         do
-          pop <- loadPop (file ++ ".pop")
+          pop <- loadPop file
           let ind = bestIndividual gen pop
           saveGenAnt file ind
       _ -> -- combine the two previous cases
