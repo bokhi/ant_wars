@@ -1,0 +1,1 @@
+(If (IsEnemy (3,0,1,0)) (If (IsEnemy (7,2,3,0)) (NbVisited (2,4,2,0)) (NbVisited (2,2,2,1))) (NbFood (9,9,1,2)),Mul (Mul PointLeft (NbFood (8,0,2,1))) (Mul (Mul PointLeft (NbFood (9,9,1,2))) PointLeft))

@@ -1,0 +1,1 @@
+(Mul (NbEmpty (6,7,1,1)) (Add (Mul (Mul PointLeft (NbFood (9,9,1,2))) (Add (Sub (Mul (Add (Mul PointLeft (Add (Mul (Const 3) (NbFood (8,0,2,1))) (NbEmpty (3,0,3,1)))) (Mul (NbEmpty (0,4,2,2)) (NbEmpty (0,10,2,2)))) (NbEmpty (0,10,2,2))) (Sub (NbEmpty (10,6,0,0)) (If (IsEnemy (3,0,1,0)) (NbFood (0,5,2,3)) (NbFood (8,0,2,1))))) (Const 3))) (NbFood (0,5,2,3))),PointLeft)

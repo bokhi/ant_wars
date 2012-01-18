@@ -1,0 +1,1 @@
+(Mul (Mul PointLeft (NbFood (9,9,1,2))) (Add (NbFood (8,0,2,1)) (Mul PointLeft (NbFood (9,9,1,2)))),Const 1)

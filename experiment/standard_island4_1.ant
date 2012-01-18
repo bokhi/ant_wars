@@ -1,0 +1,1 @@
+(Mul (NbVisited (1,1,2,1)) (NbEmpty (1,0,0,3)),If (IsEqual (Const 2) (Mul (NbEmpty (2,8,1,1)) PointLeft)) (NbFood (5,1,0,0)) (NbEmpty (5,10,3,2)))
