@@ -20,7 +20,7 @@ defaultParameter = Parameter { crossRate = 0.5
                              , popDepth = 7
                              , popMaxDepth = 15
                              , tournamentSize = 10
-                             , nbGeneration = 50
+                             , nbGeneration = 100
                              , expressivenessLevel = (12, 12)
                              }
 initParameter [] = defaultParameter
