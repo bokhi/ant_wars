@@ -28,7 +28,7 @@
 \addcontentsline{toc}{section}{Introduction}
 
 As part of the ECMM409 team project, we decided to work on one the
-GECCO 2007 competion problems : Ant Wars.\\
+GECCO 2007 competition problems : Ant Wars.\\
 
 This game, involving two opponent ants, takes place on a square
 toroidal grid of dimension 11x11. Initially, 15 pieces of food are
@@ -43,7 +43,7 @@ player. The score being only based on the number of pieces of food
 eaten, the ants have to collect as much food as possible from their
 environment.\\
 
-The aim of this project was to find the best algorithm representating
+The aim of this project was to find the best algorithm representation
 a winning ant behaviour we could, using a nature inspired approach,
 and we decided to use a strongly-typed genetic programming algorithm
 to design our ant.\\
@@ -122,18 +122,18 @@ think they were not appropriate to solve this project :
 Only two approaches seemed to be possible. We could have evolved a
 population of neural networks represented by a list of coefficients
 using a genetic algorithm, each neural network representing an ant
-taking a grid as input and calculating wheher or not the ant should go
+taking a grid as input and calculating whether or not the ant should go
 forward. But a genetic programming algorithm appeared to be more
 natural to solve the ant wars problem.
 
 \section{Genetic programming algorithm details}
 
-Genetic programming is merely a genetic algorithm with programms
+Genetic programming is merely a genetic algorithm with programs
 usually represented in the infix form using a tree structure.\\
 
 We a used strongly-typed approach for our algorithm. In effect, the
-trees were generated according to a predifined grammar and contained
-two types of data : boolean and integer values. The operators used
+trees were generated according to a predefined grammar and contained
+two types of data : Boolean and integer values. The operators used
 were functions manipulating these two types and were inspired some
 rule-based ant algorithm we had previously designed.\\
 
@@ -170,7 +170,7 @@ The grammar was defined by :
 
 An ant was represented by two I expressions. Indeed, to exploit the
 symmetry of the game, the first tree was evaluated to generate an
-integer which reprented the likeliness to go North, then the grid was
+integer which represented the likeliness to go North, then the grid was
 rotated and presented again to the tree to be evaluated. The second
 tree represented a diagonal movement on the grid. After evaluating the
 height possibilities, the ant selects the direction associated with
@@ -178,21 +178,39 @@ the higher number computed.\\
 
 What differs from usual genetic algorithm is that we are not using any
 explicit fitness function to evaluate the population of ants. Indeed,
-a fitness function associates a number caracterising the performances
-of a particuliar individuals, in our case one cannot assess the
+a fitness function associates a number characterising the performances
+of a particular individuals, in our case one cannot assess the
 performance of a given ant without playing games against other
 ants. This was quite problematic, so we decided to combine the
 selection and evaluation step in one phase to avoid the problem of
 finding a fitness function.\\
 
-To generate a new individual given a population, we randomly select of
-certain number of ants according to a pressure parameter
+To generate a new individual given a population, we randomly select a
+certain number of ants according to a pressure parameter without
+removing them from the population, then these ants are playing a match
+against each other in a simple tournament in order to find the best
+ant of the selected group. The process is repeated to find a second
+ant. Given these two ants, the traditional crossing-over and mutation
+operators are applied to give two evolved ants. Finally, we repeat
+the precedent step a sufficient number of time until the size of the
+population is reached.\\
 
-
-
-
+The key differences are that there is no fitness function, the
+selection and evaluation steps are combined, a whole new population is
+created at each step of the algorithm.\\
 
 \section{Framework and algorithm implementation}
+
+We used Haskell, a functional programming language, to implement the
+game framework as well as the genetic algorithm. Two of most important
+features characterising Haskell are its laziness and strongly typed
+system. The former was extremely useful and justify the use of Haskell
+for the implementation : the grammar we defined was explicitly
+recursive, and thus Haskell's laziness allowed us to defined mutually
+recursive data structure to represent the grammar. On the other side,
+the strong type system happened to be extremely useful to define
+functions manipulating the tree expressions such as the mutation
+operators.
 
 \section{Results}
 
