@@ -137,6 +137,57 @@ two types of data : boolean and integer values. The operators used
 were functions manipulating these two types and were inspired some
 rule-based ant algorithm we had previously designed.\\
 
+The grammar was defined by :
+\begin{itemize}
+\item B expression
+  \begin{itemize}
+    \item T : represent true value 
+    \item F : represent false value
+    \item IsFood Rect : is there food in the specified rectangular area
+    \item IsEmemy Rect : is there an enemy
+    \item And B B
+    \item Or B B
+    \item Not B
+    \item IsSmaller I I
+    \item IsEqual I I
+  \end{itemize}
+\item I expression
+  \begin{itemize}
+  \item Const Int : represent an integer value
+  \item If B I I
+  \item Add I I
+  \item Sub I I
+  \item Mul I I
+  \item NbFood Rect : number of pieces of food within the area specified
+  \item NbEmpty Rect : number of empty cells
+  \item NbVisived Rect : number of cells already visited
+  \item Point : pieces of food eaten so far
+  \item PointLeft : potential number of food left on the grid
+  \item TimeLeft : number of turn before the game ends
+  \item FoodHope Rect : number of pieces of food accessible within two moves
+  \end{itemize}
+\end{itemize}
+
+An ant was represented by two I expressions. Indeed, to exploit the
+symmetry of the game, the first tree was evaluated to generate an
+integer which reprented the likeliness to go North, then the grid was
+rotated and presented again to the tree to be evaluated. The second
+tree represented a diagonal movement on the grid. After evaluating the
+height possibilities, the ant selects the direction associated with
+the higher number computed.\\
+
+What differs from usual genetic algorithm is that we are not using any
+explicit fitness function to evaluate the population of ants. Indeed,
+a fitness function associates a number caracterising the performances
+of a particuliar individuals, in our case one cannot assess the
+performance of a given ant without playing games against other
+ants. This was quite problematic, so we decided to combine the
+selection and evaluation step in one phase to avoid the problem of
+finding a fitness function.\\
+
+To generate a new individual given a population, we randomly select of
+certain number of ants according to a pressure parameter
+
 
 
 
