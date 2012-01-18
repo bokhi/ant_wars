@@ -299,7 +299,7 @@ evalI (NbVisited r) a m g = foldl (\ s p -> if withinRect (antPosition g a) r p 
 evalI (Point) a m g = (score g) !! a
 evalI (PointLeft) a m g = nbFood - evalI (Point) a m g
 evalI (TimeLeft) a m g = nbMove - length (tracks m)
-evalI (FoodHope (x, y, dx, dy)) a m g = evalI (NbFood ((-1) `mod` dimension, (-2) `mod` dimension, 2, 2)) a m g
+evalI (FoodHope (x, y, dx, dy)) a m g = evalI (NbFood ((-2) `mod` dimension, (-1) `mod` dimension, 2, 2)) a m g
 
 -- | data of type I or B use when the returned node's type is unknown
 data IB = B' B | I' I deriving Show
