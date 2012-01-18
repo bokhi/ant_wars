@@ -105,9 +105,41 @@ implementation or to the unexpected results of some experiments.
 
 \section{Choice of nature inspired algorithm}
 
-The GECCO web-page stipulates
+The GECCO web-page stipulates that the solution had to be evolved,
+thus, implying that genetic programming had to be used. However, in
+the context of this project we had to consider every nature inspired
+technique available. The next paragraph lists the different nature
+inspired techniques we were told and studied this term and why we
+think they were not appropriate to solve this project :
+
+\begin{itemize}
+\item Cellular automaton : used to model phenomena
+\item Neural network : input : grid - output : go forward or not
+  problem : huge set of training data needed
+\item Genetic & PSO algorithm : for optimisation problems, exploring solution space
+\end{itemize}
+
+Only two approaches seemed to be possible. We could have evolved a
+population of neural networks represented by a list of coefficients
+using a genetic algorithm, each neural network representing an ant
+taking a grid as input and calculating wheher or not the ant should go
+forward. But a genetic programming algorithm appeared to be more
+natural to solve the ant wars problem.
 
 \section{Genetic programming algorithm details}
+
+Genetic programming is merely a genetic algorithm with programms
+usually represented in the infix form using a tree structure.\\
+
+We a used strongly-typed approach for our algorithm. In effect, the
+trees were generated according to a predifined grammar and contained
+two types of data : boolean and integer values. The operators used
+were functions manipulating these two types and were inspired some
+rule-based ant algorithm we had previously designed.\\
+
+
+
+
 
 \section{Framework and algorithm implementation}
 
