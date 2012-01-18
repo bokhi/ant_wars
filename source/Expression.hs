@@ -1,5 +1,6 @@
 -- | This module contains the data and functions required to construct ant program expressions
 module Expression (I(..)
+                  , B(..)
                   , IB(..)
                   , depthI
                   , selectI
