@@ -69,7 +69,7 @@ greedy' a m g = greedy a m (memoryGrid (updateMemory m a g) g)
     
 -- | user input function        
 user :: AntNb -> Memory -> Grid -> Direction
-user a m g = unsafePerformIO $ do
+user a _ g = unsafePerformIO $ do
   print g'
   d <- getLine
   return (read d :: Direction)

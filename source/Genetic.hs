@@ -51,18 +51,18 @@ crossAnt param gen (i1, i1') (i2, i2') = (cross param g i1 i2, cross param g' i1
   where
     (g, g') = split gen
 
--- -- | mutate a I expression      
--- mutate :: Parameter -> StdGen -> I -> I      
--- mutate param gen i = case selectI pos i 1 of
---   B' b -> recSimplifyI $ replaceIB pos i (generateB param g' (nodeB b)) 1
---   I' i' -> recSimplifyI $ replaceII pos i (generateI param g' (nodeI i')) 1
---   where
---     (g, g') = split gen
---     pos = fst (randomR (1, nodeI i) g) :: Int
-    
--- | mutate a I expression the terminal node are affected by a small perturbation
+-- | mutate a I expression      
 mutate :: Parameter -> StdGen -> I -> I      
 mutate param gen i = case selectI pos i 1 of
+  B' b -> recSimplifyI $ replaceIB pos i (generateB param g' (nodeB b)) 1
+  I' i' -> recSimplifyI $ replaceII pos i (generateI param g' (nodeI i')) 1
+  where
+    (g, g') = split gen
+    pos = fst (randomR (1, nodeI i) g) :: Int
+    
+-- | mutate a I expression in a way that terminal nodes are affected by a small perturbation
+mutate' :: Parameter -> StdGen -> I -> I      
+mutate' param gen i = case selectI pos i 1 of
   B' (IsFood r) -> recSimplifyI $ replaceIB pos i (IsFood $ rectMutation g r) 1
   B' (IsEnemy r) -> recSimplifyI $ replaceIB pos i (IsEnemy $ rectMutation g r) 1
   B' b -> recSimplifyI $ replaceIB pos i (generateB param g' (nodeB b)) 1
@@ -79,7 +79,6 @@ mutate param gen i = case selectI pos i 1 of
       (x + fst (randomR (mutateRange param) (g !! 0)), y + fst (randomR (mutateRange param) (g !! 1)), dx, dy)
         where
           g = splits 2 gen
-
 
 -- | mutation for GenAnt    
 mutateAnt :: Parameter -> StdGen -> GenAnt -> GenAnt    

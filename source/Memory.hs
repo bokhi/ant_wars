@@ -13,8 +13,8 @@ import Grid
 memoryFood = 15 -- number of fovs a ant can remember related to food
 memoryTrack = 15 -- number of previous moves an ant can remember
 
-data Memory = Memory { foods :: [[(Int, Int)]]
-                     , tracks :: [(Int, Int)]
+data Memory = Memory { foods :: [[(Int, Int)]] -- previous food-related fovs
+                     , tracks :: [(Int, Int)] -- list a position previously explored
                      } deriving Show
                                 
 -- | initialise the memory of an ant                                

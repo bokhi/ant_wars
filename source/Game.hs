@@ -5,6 +5,7 @@ module Game (Game(..)
             , initGame
             , runGame
             , runMatch
+            , gameWinner
             , saveGame
             , tournament
             , matchPercentage

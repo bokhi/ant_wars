@@ -25,7 +25,7 @@ main =
           pop <- loadPop ("../experiment/" ++ file)
           let ind = bestIndividual gen pop
           saveGenAnt ("../experiment/" ++ file) ind
-      _ -> -- combine the two previous cases
+      "gen" -> -- combine the two previous cases
         do
           let (g, g') = split gen
           putStrLn "nbFood nbKill nbGame averageDepth"
@@ -33,6 +33,20 @@ main =
           savePop (file ++ ".pop") pop
           let ind = bestIndividual g' pop
           saveGenAnt file ind
+      "tour" -> -- tournament between the specified evolved ant and the rule based antsa
+        do
+          ant <- loadGenAnt $ head args
+          let (a:b:c:d:e:[]) = map matchPercentage $ tournament (generateGrids gen) selection5 ((geneticAnt ant) : ruleBasedAnts')
+          appendFile ("../experiment/standardBestAnt.dat") ((show a) ++ " " ++ (show b) ++ " " ++ (show c) ++ " " ++ (show d) ++ " " ++ (show e) ++ "\n")
+      "play" -> -- play a game against the specified evolved ant
+        do
+          ant <- loadGenAnt $ head $ drop 1 args
+          let grids = generateGrids gen
+          let game = initGame (head grids) (user:[geneticAnt ant])
+          let game' = runGame game
+          putStrLn ("ant " ++ (show $ gameWinner game') ++ "wins")
+      _ -> 
+        putStrLn "See documentation, or code source :)"
 
 
 

@@ -21,14 +21,16 @@ import Grid
 import Memory
 import Game
 
--- | (x, y, dx, dy) is a rectangle starting at position (x, y) on the grid and of length dx and dy
+-- | (x, y, dx, dy) is a rectangle starting at position (x, y) on the
+-- grid and of length dx and dy - the position is usually considered
+-- relatively to the ant position on the grid
 type Rect = (Int, Int, Int, Int)
 
 dx = 4 -- maximum dx size of a rectangle
 dy = 4 -- maximum dy size of a rectangle
 
 -- | Represent boolean function
-data B = IsFood Rect
+data B = IsFood Rect 
        | IsEnemy Rect
        | And B B
        | Or B B

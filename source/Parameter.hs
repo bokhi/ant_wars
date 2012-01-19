@@ -9,7 +9,7 @@ data Parameter = Parameter { crossRate :: Float --crossing-over mutation rate
                            , mutateRange :: (Int, Int) -- interval of perturbation of a terminal node value
                            , popSize :: Int -- size of the program population
                            , popDepth :: Int -- initial maximum depth of newly created individuals
-                           , popMaxDepth :: Int
+                           , popMaxDepth :: Int -- maximum depth accepted within a population
                            , tournamentSize :: Int -- size of the tournament caracterising the selection pressure
                            , nbGeneration :: Int -- number of generation the algorithm is run
                            , expressivenessLevel ::  (Int, Int) -- express which part of the grammar are used to construct B and I expressions - ranging from (0, 0) to (6, 10)
