@@ -1,0 +1,1 @@
+(Mul PointLeft (Mul (Const 5) (NbFood (8,10,2,2))),NbFood (8,10,2,2))

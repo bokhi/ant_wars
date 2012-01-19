@@ -1,0 +1,1 @@
+(If (And (Not (And (IsEnemy (3,0,2,1)) (IsEqual (Const 5) (NbFood (6,1,0,1))))) (IsFood (8,3,2,3))) Point (NbFood (8,9,3,2)),Sub Point (Const 3))

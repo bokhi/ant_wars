@@ -1,0 +1,1 @@
+(Sub Point (If (IsEnemy (9,9,3,1)) (NbVisited (7,10,0,3)) (Sub (NbEmpty (0,1,0,1)) Point)),NbEmpty (6,0,2,0))

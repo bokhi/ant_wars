@@ -1,0 +1,1 @@
+(Add PointLeft (If (And (IsFood (7,10,3,3)) (Not (IsFood (7,4,0,2)))) (Const 4) (Add (Sub (If (IsFood (10,7,0,1)) (Const 3) (NbVisited (9,10,2,2))) (Const 4)) (If (IsEnemy (8,6,0,2)) (NbEmpty (2,8,3,1)) (NbEmpty (10,8,0,2))))),Const 4)

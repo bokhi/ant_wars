@@ -1,0 +1,1 @@
+(NbVisited (5,4,1,1),Sub (Sub (NbVisited (5,1,2,0)) (If (IsEnemy (6,1,3,1)) (Const 5) (If (And (And (IsFood (10,3,2,2)) (IsFood (9,10,1,1))) (Or (IsEnemy (3,1,0,1)) (IsEnemy (3,7,0,3)))) (NbEmpty (8,5,0,3)) (Mul Point (NbFood (5,5,2,2)))))) (Mul (If (IsFood (9,1,2,3)) (NbVisited (10,0,1,2)) PointLeft) PointLeft))

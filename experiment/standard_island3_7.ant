@@ -1,0 +1,1 @@
+(Point,Mul (If (IsFood (7,9,3,2)) (Sub PointLeft (Mul (Const 2) (NbFood (9,0,2,1)))) Point) (NbFood (8,10,2,2)))
