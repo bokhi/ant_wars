@@ -87,7 +87,7 @@ they were not appropriate to solve this problem :
 \item Cellular automaton : used to model phenomena
 \item Neural network : input : grid - output : go forward or not |
   problem : huge set of training data needed
-\item Genetic & PSO algorithm : for optimisation problems, exploring solution space
+\item Genetic \amp PSO algorithm : for optimisation problems, exploring solution space
 \end{itemize}
 
 Only two approaches seemed to be possible. We could have evolved a
@@ -190,12 +190,36 @@ mutation operators.
 
 \section{Results}
 
+The best evolve ant can be found in the experiment directory
+(experiment \slash standard\_island4\_37.ant)\\
+
+As Figure \ref{food} suggests, generation after generation the average
+level of the population increase, and by the end of the algorithm, 13
+out 15 pieces of food were find by the competing ants.\\
+
+\begin{figure}
+\begin{center}
 \includegraphics[scale=0.3]{../experiment/standard_island4_food_stat.png}
+\end{center}
+\label{food}
+\end{figure}
+
+However, the best ant we could evolved was less victorious than most
+of rule-based ants we designed. This is showed by Figure \ref{rules}
+
+\begin{figure}
+\begin{center}
 \includegraphics[scale=0.3]{../experiment/standardBestAnt.png}
-
-
+\end{center}
+\label{rules}
+\end{figure}
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
+
+So far, we did not manage to evolve ants more efficient than
+manually-designed rule-based ants. However it can be easily seen that
+our genetic algorithm tend to produce better ants generation after
+generation
 
 \end{document}
